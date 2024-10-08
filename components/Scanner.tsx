@@ -4,7 +4,12 @@ import { useCameraDevice, useCameraPermission } from 'react-native-vision-camera
 import { Camera } from 'react-native-vision-camera-text-recognition';
 import { parseDateFromScan, TextData } from '@/lib/dates';
 
-const Scanner = () => {
+interface ScannerProps {
+    setScanning: any,
+    setScanData: any
+}
+
+const Scanner = (props : ScannerProps) => {
     const { hasPermission, requestPermission } = useCameraPermission()
 
   
@@ -19,6 +24,8 @@ const Scanner = () => {
       const foundDate = parseDateFromScan(data.resultText);
   
       if (foundDate) {
+        props.setScanData(foundDate.toLocaleString());
+        props.setScanning(false);
         console.log("Date string: " + foundDate.toLocaleString());
       }
     }

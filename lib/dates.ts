@@ -33,7 +33,7 @@ export const parseDateFromScan = (input: string): Date | null => {
 
     let intMonth = parseInt(match[2]);
     if (isNaN(intMonth)) {
-        month = monthMap[match[2] as keyof typeof monthMap];
+        month = monthMap[match[2].toUpperCase() as keyof typeof monthMap];
     }
     else {
         month = intMonth - 1;
