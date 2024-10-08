@@ -1,6 +1,9 @@
 import { View, type ViewProps } from 'react-native';
-
 import { useThemeColor } from '@/hooks/useThemeColor';
+
+import { useCameraDevice, useCameraPermission } from 'react-native-vision-camera'
+import { Camera } from 'react-native-vision-camera-text-recognition';
+import { parseDateFromScan, TextData } from '@/lib/dates';
 
 export type ThemedViewProps = ViewProps & {
   lightColor?: string;
