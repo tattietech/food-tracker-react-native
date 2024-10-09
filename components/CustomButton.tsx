@@ -4,9 +4,9 @@ import React from 'react'
 interface CustomButtonProps {
     title: string,
     handlePress: any,
-    containerStyles: string,
-    textStyles: string,
-    isLoading: boolean
+    containerStyles?: string,
+    textStyles?: string,
+    isLoading?: boolean
 }
 
 const CustomButton = (props : CustomButtonProps) => {
@@ -14,11 +14,11 @@ const CustomButton = (props : CustomButtonProps) => {
         <TouchableOpacity
             onPress={props.handlePress}
             activeOpacity={0.7}
-            className={`bg-secondary rounded-xl min-h-[62px] justify-center items-center
+            className={`bg-primary rounded-xl min-h-[62px] justify-center items-center
             ${props.containerStyles} ${props.isLoading ? 'opacity-50' : ''}`}
             disabled={props.isLoading}
         >
-            <Text className={`text-primary font-psemibold text-lg ${props.textStyles}`}>
+            <Text className={`text-white font-psemibold text-lg ${props.textStyles}`}>
                 {props.title}
             </Text>
         </TouchableOpacity>

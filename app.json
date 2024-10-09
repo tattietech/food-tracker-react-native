@@ -13,6 +13,7 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
+      "package": "com.ab.food-tracker",
       "supportsTablet": true,
       "bundleIdentifier": "com.irnbruce.food-tracker",
       "infoPlist": {
