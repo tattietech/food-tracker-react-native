@@ -38,7 +38,6 @@ const SignIn = () => {
     } finally {
       setIsSubmitting(false);
     }
-    createUser();
   }
 
   return (

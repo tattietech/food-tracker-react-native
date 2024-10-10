@@ -1,3 +1,5 @@
+
+import { IItem } from '@/interfaces/IItem';
 import { Account, Avatars, Client, Databases, ID, Query } from 'react-native-appwrite'
 
 export const config = {
@@ -98,11 +100,9 @@ export const signOut = async () => {
     }
 }
 
-export const createItem = async (name:string, expiry:Date, quantity:string, userId:string) => {
+export const createItem = async (name:string, expiry:Date, quantity:string, userId:string): Promise<IItem> => {
 
     let quant = parseInt(quantity, 10) || 1;
-
-    console.log(name, expiry, quant, userId);
 
     try {
         const newItem = await databases.createDocument(
@@ -116,9 +116,8 @@ export const createItem = async (name:string, expiry:Date, quantity:string, user
                 userId: userId
             }
         );
-
-        console.log(newItem);
-    return newItem;
+        
+    return newItem as IItem;
     }
     catch (error) {
         console.log(error);
@@ -126,19 +125,19 @@ export const createItem = async (name:string, expiry:Date, quantity:string, user
     }
 }
 
-// export const getAllPosts = async () => {
-//     try {
-//         const posts = await databases.listDocuments(
-//             config.databaseId,
-//             config.videoCollectionId,
-//             [Query.orderDesc('$createdAt')]
-//         )
+export const getAllItems = async (): Promise<IItem[]> => {
+    try {
+        const posts = await databases.listDocuments<IItem>(
+            config.databaseId,
+            config.itemCollectionId,
+            [Query.orderAsc('expiry')]
+        )
 
-//         return posts.documents;
-//     } catch (error) {
-//         throw new Error(error);
-//     }
-// }
+        return posts.documents;
+    } catch (error) {
+        throw new Error((error as Error).message);
+    }
+}
 
 // export const getLatestPosts = async () => {
 //     try {

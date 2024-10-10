@@ -1,13 +1,21 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { getCurrentUser } from "../lib/appwrite";
+import { IItem } from "../interfaces/IItem";
+import { IAppWriteDocument } from "@/interfaces/IAppWriteDocument";
 
-const GlobalContext = createContext();
+// default null context
+export const def : any = null;
+const GlobalContext = createContext(def);
 export const useGlobalContext = () => useContext(GlobalContext);
 
-const GlobalProvider = ({ children }) => {
+interface GlobalProviderProps {
+    children: any
+}
+const GlobalProvider = (props: GlobalProviderProps) => {
 const [isLoggedIn, setIsLoggedIn] = useState(false);
-const [user, setUser] = useState(null)
+const [user, setUser] = useState<IAppWriteDocument | null>(null)
 const [isLoading, setIsLoading] = useState(true);
+const [globalItems, setGlobalItems] = useState<IItem[] | null>(null);
 
 useEffect(() => {
     getCurrentUser()
@@ -36,10 +44,12 @@ useEffect(() => {
                 setIsLoggedIn,
                 user,
                 setUser,
-                isLoading
+                isLoading,
+                globalItems,
+                setGlobalItems
             }}
         >
-            {children}
+            {props.children}
         </GlobalContext.Provider>
 
     )

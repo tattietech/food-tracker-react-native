@@ -9,19 +9,19 @@ import { useGlobalContext } from '@/context/GlobalProvider';
 import { createItem } from '@/lib/appwrite';
 import NumberInput from '@/components/NumberInput';
 import Icon from 'react-native-vector-icons/AntDesign';
+import { IItem } from '@/interfaces/IItem';
 
 
 export default function Add() {
-  const { user } = useGlobalContext();
+  const { user, globalItems, setGlobalItems } = useGlobalContext();
   const [scanning, setScanning] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [enterManually, setEnterManually] = useState(false);
-  const [dateString, setDateString] = useState((new Date()).toLocaleDateString())
 
   const [form, setForm] = useState({
     title: "",
     expiry: new Date(),
-    quantity: "",
+    quantity: "1",
   })
 
   const submit = async () => {
@@ -33,12 +33,22 @@ export default function Add() {
     setSubmitting(true);
 
     try {
-      createItem(form.title, form.expiry, form.quantity, user.$id);
+      let item = await createItem(form.title, form.expiry, form.quantity, user.$id);
+
+      setGlobalItems((prevItems: IItem[] | null) => {
+        // If prevItems is null, initialize it as an empty array, then add the new item
+        let newList = prevItems ? [...prevItems, item] : [item];
+
+        // sort items by expiry
+        return newList.sort((a, b) => new Date(a.expiry).getTime() - new Date(b.expiry).getTime());
+      });
+
       setForm({
         title: "",
         expiry: new Date(),
-        quantity: ""
-      })
+        quantity: "1"
+      });
+      Alert.alert("Item added");
     }
     catch (error) {
       Alert.alert("Error", (error as Error).message);
@@ -52,11 +62,11 @@ export default function Add() {
   return (
     <SafeAreaView className="h-screen">
       {scanning && <Scanner setScanning={setScanning} setForm={setForm} form={form} />}
-      {!scanning && <View className="px-4 my-6">
+      {!scanning && <View className="px-4 my-6 h-full">
         <Text className="text-2xl text-center font-psemibolds">
           Add New Item
         </Text>
-        <View className="mt-20 flex flex-col space-y-16">
+        <View className="mt-6 flex flex-col space-y-8">
           <View>
             <FormField
               title="Title"
@@ -69,26 +79,17 @@ export default function Add() {
           <View>
             <Text className="text-base font-pmedium ml-2">Expiry Date</Text>
 
-            <View className="flex space-x-10 flex-row items-center mt-2 ml-2">
-              <Text className="text-xl font-pmedium">{new Date(form.expiry).toLocaleDateString()}</Text>
+            <View className="flex flex-row items-center mt-2 border-2 rounded-xl h-16 px-4">
+              <Text onPress={() => {setEnterManually(!enterManually)}} className="text-base font-pmedium">{new Date(form.expiry).toLocaleDateString()}</Text>
 
-              <View className="flex flex-row space-x-2">
-                <TouchableOpacity
-                  onPress={() => { setScanning(true) }}
-                  activeOpacity={0.7}
-                  className="bg-primary flex-row space-x-2 px-2 h-10 w-28 rounded-xl justify-center items-center"
-                >
-                  <Icon name="camera" color="white" size={30} />
-                  <Text className="text-white">Scan</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => { setEnterManually(!enterManually) }}
-                  activeOpacity={0.7}
-                  className="bg-primary px-2 h-10 w-28 rounded-xl justify-center items-center"
-                >
-                  <Text className="text-white">{enterManually ? "Close" : "Manual"}</Text>
-                </TouchableOpacity>
-              </View>
+              <TouchableOpacity
+                onPress={() => { setScanning(true) }}
+                activeOpacity={0.7}
+                className="bg-primary flex-row space-x-2 px-2 h-12 w-28 rounded-xl justify-center items-center absolute right-1"
+              >
+                <Icon name="camera" color="white" size={30} />
+                <Text className="text-white">Scan</Text>
+              </TouchableOpacity>
             </View>
 
             {enterManually &&
@@ -109,16 +110,16 @@ export default function Add() {
 
           <View>
             <Text className="text-base font-pmedium ml-2">Quantity</Text>
-            <NumberInput />
+            <NumberInput form={form} setForm={setForm} />
           </View>
+        </View>
 
-          <CustomButton
+        <CustomButton
             title="Add Item"
             handlePress={submit}
             isLoading={submitting}
-            containerStyles="mt-8"
+            containerStyles="mt-8 absolute bottom-20 w-full justify-center self-center"
           />
-        </View>
       </View>}
     </SafeAreaView>
   )
