@@ -18,8 +18,8 @@ module.exports = {
         gray: {
           100: "#CDCDE0",
         },
-        red: "#c2323a",
         green: "#32c237",
+        red: "#c2323a",
         amber: "#c29932",
       }
     },

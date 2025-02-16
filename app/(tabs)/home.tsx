@@ -37,9 +37,9 @@ export default function Home() {
 
 
   return (
-    <SafeAreaView className="h-full">
+    <SafeAreaView className="h-full bg-white">
       <Text className="text-2xl text-center font-psemibolds">
-          Add New Item
+          Items
         </Text>
       <FlatList
       className="mt-10"

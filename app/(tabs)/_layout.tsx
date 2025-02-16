@@ -17,7 +17,8 @@ export default function TabLayout() {
         tabBarLabelStyle: {
           color: 'primary'
         }
-      }}>
+      }}
+      >
       <Tabs.Screen
         name="home"
         options={{
@@ -33,6 +34,15 @@ export default function TabLayout() {
           title: 'Add Item',
           tabBarIcon: ({ color, focused }) => (
             <TabBarIcon name={focused ? 'add' : 'add-outline'} color={'primary'} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: 'Settings',
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon name={focused ? 'settings' : 'settings-outline'} color={'primary'} />
           ),
         }}
       />

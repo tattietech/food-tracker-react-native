@@ -60,9 +60,9 @@ export default function Add() {
 
 
   return (
-    <SafeAreaView className="h-screen">
+    <SafeAreaView className="h-screen bg-white">
       {scanning && <Scanner setScanning={setScanning} setForm={setForm} form={form} />}
-      {!scanning && <View className="px-4 my-6 h-full">
+      {!scanning && <View className="px-4 h-full">
         <Text className="text-2xl text-center font-psemibolds">
           Add New Item
         </Text>
