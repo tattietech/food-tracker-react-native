@@ -80,7 +80,9 @@ export default function Add() {
             <Text className="text-base font-pmedium ml-2">Expiry Date</Text>
 
             <View className="flex flex-row items-center mt-2 border-2 rounded-xl h-16 px-4">
-              <Text onPress={() => {setEnterManually(!enterManually)}} className="text-base font-pmedium">{new Date(form.expiry).toLocaleDateString()}</Text>
+              <TouchableOpacity className="h-full w-full flex-row items-center" onPress={() => {setEnterManually(!enterManually)}}>
+                <Text className="text-base font-pmedium">{new Date(form.expiry).toLocaleDateString()}</Text>
+              </TouchableOpacity>
 
               <TouchableOpacity
                 onPress={() => { setScanning(true) }}
