@@ -13,13 +13,17 @@ export default function TabLayout() {
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
+        tabBarShowLabel: true,
+        tabBarLabelStyle: {
+          color: 'primary'
+        }
       }}>
       <Tabs.Screen
         name="home"
         options={{
           title: 'Home',
           tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'home' : 'home-outline'} color={color} />
+            <TabBarIcon name={focused ? 'home' : 'home-outline'} color={'primary'} />
           ),
         }}
       />
@@ -28,7 +32,7 @@ export default function TabLayout() {
         options={{
           title: 'Add Item',
           tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'add' : 'add-outline'} color={color} />
+            <TabBarIcon name={focused ? 'add' : 'add-outline'} color={'primary'} />
           ),
         }}
       />

@@ -56,3 +56,20 @@ export const parseDateFromScan = (input: string): Date | null => {
 
     return new Date(year, month, day);
 };
+
+export function getDateColour(date : Date): string {
+    let currentDate = new Date();
+    let inputDate = new Date(date);
+
+    if (inputDate <= currentDate) return "red"
+
+    if (inputDate <= addDays(currentDate, 3)) return "amber"
+    
+    return "green";
+}
+
+export function addDays (date: Date, days: number): Date {
+    if (!days) return date;
+    date.setDate(date.getDate() + days);
+    return date;
+ };

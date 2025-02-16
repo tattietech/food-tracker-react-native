@@ -41,7 +41,7 @@ const SignIn = () => {
   }
 
   return (
-    <SafeAreaView className="bg-primary h-full">
+    <SafeAreaView className="h-full">
       <ScrollView>
         <View className="w-full justify-center min-h-[82vh] px-4 my-6">
           {/* <Image
@@ -50,8 +50,8 @@ const SignIn = () => {
             className="w-[115px] h-[35px]"
           /> */}
 
-          <Text className="text-2xl text-white text-semibold mt-10 font-psemibold">
-            Log in to Aora
+          <Text className="text-2xl text-primary text-semibold mt-10 font-psemibold">
+            Log in to Food Tracker
           </Text>
 
           <FormField
@@ -77,10 +77,10 @@ const SignIn = () => {
           />
 
           <View className="justify-center pt-5 flex-row gap-2">
-            <Text className="text-lg text-gray-100 font-pregular">
+            <Text className="text-lg font-pregular">
               Don't have an account?
             </Text>
-            <Link href="/sign-up" className="text-lg font-psemibold text-secondary">Sign Up</Link>
+            <Link href="/sign-up" className="text-lg font-psemibold">Sign Up</Link>
           </View>
         </View>
       </ScrollView>

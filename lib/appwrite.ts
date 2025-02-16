@@ -125,12 +125,12 @@ export const createItem = async (name:string, expiry:Date, quantity:string, user
     }
 }
 
-export const getAllItems = async (): Promise<IItem[]> => {
+export const getAllItems = async (userId: string): Promise<IItem[]> => {
     try {
         const posts = await databases.listDocuments<IItem>(
             config.databaseId,
             config.itemCollectionId,
-            [Query.orderAsc('expiry')]
+            [Query.equal('userId', userId), Query.orderAsc('expiry')]
         )
 
         return posts.documents;

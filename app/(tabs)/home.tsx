@@ -10,8 +10,13 @@ import { useIsFocused } from "@react-navigation/native";
 import CustomButton from '@/components/CustomButton';
 
 export default function Home() {
-  const { globalItems, setGlobalItems } = useGlobalContext();
-  const { data: data, refetch } = useAppwrite<IItem[]>(getAllItems);
+  const { globalItems, setGlobalItems, user } = useGlobalContext();
+  
+  const getItemsForUser = async (): Promise<IItem[]> => {
+    return getAllItems(user.$id);
+  };
+
+  const { data: data, refetch } = useAppwrite<IItem[]>(getItemsForUser);
   const [refreshing, setRefreshing] = useState(false);
 
   const onRefresh = async () => {
