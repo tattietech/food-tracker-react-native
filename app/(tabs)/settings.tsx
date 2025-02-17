@@ -1,7 +1,7 @@
 import DividerLine from '@/components/DividerLine';
 import MenuItem from '@/components/MenuItem';
 import { useGlobalContext } from '@/context/GlobalProvider';
-import { signOut } from '@/lib/appwrite';
+import { appwrite } from '@/lib/appwrite';
 import { Alert, FlatList, SafeAreaView, Text, View } from 'react-native';
 import { router } from 'expo-router'
 
@@ -9,7 +9,7 @@ export default function Settings() {
   const { setUser, setIsLoggedIn } = useGlobalContext();
 
   const logOut = async () => {
-    await signOut();
+    await appwrite.signOut();
     console.log("log out");
     setUser(null);
     setIsLoggedIn(false);

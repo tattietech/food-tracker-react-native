@@ -22,6 +22,7 @@ export default function Home() {
 
   const deleteItem = async (itemId: string): Promise<void> => {
     await appwrite.deleteItem(itemId);
+    setGlobalItems(data?.filter(d => d.$id == itemId));
     refetch();
   }
 

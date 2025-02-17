@@ -1,4 +1,4 @@
-import { Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Keyboard, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 import React, { useState } from 'react'
 import Scanner from '../../components/Scanner'
 import FormField from '@/components/FormField';
@@ -60,6 +60,7 @@ export default function Add() {
 
 
   return (
+    <TouchableWithoutFeedback onPress={() => {Keyboard.dismiss(); setEnterManually(false)}} accessible={false}>
     <SafeAreaView className="h-screen bg-white">
       {scanning && <Scanner setScanning={setScanning} setForm={setForm} form={form} />}
       {!scanning && <View className="px-4 h-full">
@@ -124,5 +125,6 @@ export default function Add() {
           />
       </View>}
     </SafeAreaView>
+    </TouchableWithoutFeedback>
   )
 }
