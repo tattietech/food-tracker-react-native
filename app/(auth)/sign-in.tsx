@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import FormField from '../../components/FormField'
 import CustomButton from '../../components/CustomButton'
 import { Href, Link, router } from 'expo-router'
-import { createUser, getCurrentUser, signIn } from '../../lib/appwrite'
+import { appwrite } from '../../lib/appwrite'
 import { useGlobalContext } from '../../context/GlobalProvider'
 
 const SignIn = () => {
@@ -25,9 +25,9 @@ const SignIn = () => {
     setIsSubmitting(true);
 
     try {
-      let session = await signIn(form.email, form.password);
+      let session = await appwrite.signIn(form.email, form.password);
 
-      const result = await getCurrentUser();
+      const result = await appwrite.getCurrentUser();
 
       setUser(result);
       setIsLoggedIn(true);

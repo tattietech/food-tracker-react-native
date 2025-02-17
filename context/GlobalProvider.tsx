@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { getCurrentUser } from "../lib/appwrite";
+import { appwrite } from "../lib/appwrite";
 import { IItem } from "../interfaces/IItem";
 import { IAppWriteDocument } from "@/interfaces/IAppWriteDocument";
 
@@ -18,7 +18,7 @@ const [isLoading, setIsLoading] = useState(true);
 const [globalItems, setGlobalItems] = useState<IItem[] | null>(null);
 
 useEffect(() => {
-    getCurrentUser()
+    appwrite.getCurrentUser()
     .then((res) => {
         if (res) {
             setIsLoggedIn(true);

@@ -1,22 +1,32 @@
-import { Alert, FlatList, SafeAreaView, Text, View } from 'react-native';
+import { Alert, FlatList, SafeAreaView, Text, TouchableOpacity, View } from 'react-native';
 import { useGlobalContext } from '../../context/GlobalProvider'
 import useAppwrite from '@/lib/useAppwrite';
-import { getAllItems } from '@/lib/appwrite';
+import { appwrite } from '@/lib/appwrite';
 import { useEffect, useState } from 'react';
 import Item from '@/components/Item';
 import { IItem } from '@/interfaces/IItem';
 import { RefreshControl } from 'react-native';
-import { useIsFocused } from "@react-navigation/native";
-import CustomButton from '@/components/CustomButton';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
+import Reanimated, {
+  SharedValue,
+  useAnimatedStyle,
+} from 'react-native-reanimated';
 
 export default function Home() {
   const { globalItems, setGlobalItems, user } = useGlobalContext();
   
-  const getItemsForUser = async (): Promise<IItem[]> => {
-    return getAllItems(user.$id);
+  const getAllItems = async (): Promise<IItem[]> => {
+    return await appwrite.getAllItems(user.$id);
   };
 
-  const { data: data, refetch } = useAppwrite<IItem[]>(getItemsForUser);
+  const deleteItem = async (itemId: string): Promise<void> => {
+    await appwrite.deleteItem(itemId);
+    refetch();
+  }
+
+  const { data: data, refetch } = useAppwrite<IItem[]>(getAllItems);
+
   const [refreshing, setRefreshing] = useState(false);
 
   const onRefresh = async () => {
@@ -35,6 +45,23 @@ export default function Home() {
     }
   }, [data]);
 
+  
+const rightAction = (itemId: string) =>
+  (prog: SharedValue<number>, drag: SharedValue<number>) => {
+  const styleAnimation = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateX: drag.value + 70 }],
+    };
+  });
+
+  return (
+    <TouchableOpacity onPress={() => deleteItem(itemId)}>
+    <Reanimated.View className="bg-red h-24 px-4 items-center flex-row">
+      <Text className="text-white">Delete</Text>
+    </Reanimated.View>
+    </TouchableOpacity>
+  );
+}
 
   return (
     <SafeAreaView className="h-full bg-white">
@@ -46,7 +73,15 @@ export default function Home() {
         data={globalItems}
         keyExtractor={(item) => item.$id}
         renderItem={({item}) => (
-          <Item name={item.name} quantity={item.quantity} expiry={item.expiry}/>
+          <GestureHandlerRootView>
+      <ReanimatedSwipeable
+        friction={2}
+        enableTrackpadTwoFingerGesture
+        rightThreshold={40}
+        renderRightActions={rightAction(item.$id)}>
+        <Item name={item.name} quantity={item.quantity} expiry={item.expiry}/>
+      </ReanimatedSwipeable>
+    </GestureHandlerRootView>
         )}
         // ListHeaderComponent={() => (
         //   <Text>Filter and seach bar</Text>

@@ -24,118 +24,129 @@ const avatars = new Avatars(client);
 const databases = new Databases(client);
 // const storage = new Storage(client);
 
-export const createUser = async (email:string, password:string, name:string) => {
+export const appwrite = {
+    signIn : async (email:string, password:string) => {
+        try {
+            const session = await account.createEmailPasswordSession(email, password);
+            return session;
+        } catch (error) {
+            throw new Error((error as Error).message)
+        }
+    },
+
+    createUser : async (email:string, password:string, name:string) => {
     
-    try {
-        const newAccount = await account.create(
-            ID.unique(),
-            email,
-            password,
-            name
-        );
-
-        if (!newAccount) throw Error;
-
-        const avatarUrl = avatars.getInitials(name);
-
-        await signIn(email, password);
-
-        const newUser = await databases.createDocument(
-            config.databaseId,
-            config.userCollectionId,
-            ID.unique(),
-            {
-                accountId: newAccount.$id,
-                email: email,
-                name: name,
-                avatar: avatarUrl
-            }
-        );
-
-        return newUser;
-
-    } catch (error) {
-        console.log(error);
-        throw new Error((error as Error).message);
-    }
-}
-
-export const signIn = async (email:string, password:string) => {
-    try {
-        const session = await account.createEmailPasswordSession(email, password);
-        return session;
-    } catch (error) {
-        throw new Error((error as Error).message)
-    }
-}
-
-export const getCurrentUser = async () => {
-    try {
-        const currentAccount = await account.get();
-
-        if (!currentAccount) throw Error;
-
-        const currentUser = await databases.listDocuments(
-            config.databaseId,
-            config.userCollectionId,
-            [Query.equal("accountId", currentAccount.$id)]
-        );
-
-        if (!currentUser) throw Error;
-
-        return currentUser.documents[0];
-    } catch (error) {
-        console.log(error)
-    }
-}
-
-export const signOut = async () => {
-    try {
-        const session = await account.deleteSession("current");
-
-        return session;
-    }
-    catch (error) {
-        throw new Error((error as Error).message)
-    }
-}
-
-export const createItem = async (name:string, expiry:Date, quantity:string, userId:string): Promise<IItem> => {
-
-    let quant = parseInt(quantity, 10) || 1;
-
-    try {
-        const newItem = await databases.createDocument(
-            config.databaseId,
-            config.itemCollectionId,
-            ID.unique(),
-            {
-                name: name,
-                expiry: expiry,
-                quantity: quant,
-                userId: userId
-            }
-        );
-        
-    return newItem as IItem;
-    }
-    catch (error) {
-        console.log(error);
-        throw new Error((error as Error).message);
-    }
-}
-
-export const getAllItems = async (userId: string): Promise<IItem[]> => {
-    try {
-        const posts = await databases.listDocuments<IItem>(
-            config.databaseId,
-            config.itemCollectionId,
-            [Query.equal('userId', userId), Query.orderAsc('expiry')]
-        )
-
-        return posts.documents;
-    } catch (error) {
-        throw new Error((error as Error).message);
+        try {
+            const newAccount = await account.create(
+                ID.unique(),
+                email,
+                password,
+                name
+            );
+    
+            if (!newAccount) throw Error;
+    
+            const avatarUrl = avatars.getInitials(name);
+    
+            await appwrite.signIn(email, password);
+    
+            const newUser = await databases.createDocument(
+                config.databaseId,
+                config.userCollectionId,
+                ID.unique(),
+                {
+                    accountId: newAccount.$id,
+                    email: email,
+                    name: name,
+                    avatar: avatarUrl
+                }
+            );
+    
+            return newUser;
+    
+        } catch (error) {
+            console.log(error);
+            throw new Error((error as Error).message);
+        }
+    },
+    
+    getCurrentUser : async () => {
+        try {
+            const currentAccount = await account.get();
+    
+            if (!currentAccount) throw Error;
+    
+            const currentUser = await databases.listDocuments(
+                config.databaseId,
+                config.userCollectionId,
+                [Query.equal("accountId", currentAccount.$id)]
+            );
+    
+            if (!currentUser) throw Error;
+    
+            return currentUser.documents[0];
+        } catch (error) {
+            console.log(error)
+        }
+    },
+    
+    signOut : async () => {
+        try {
+            const session = await account.deleteSession("current");
+    
+            return session;
+        }
+        catch (error) {
+            throw new Error((error as Error).message)
+        }
+    },
+    
+    createItem : async (name:string, expiry:Date, quantity:string, userId:string): Promise<IItem> => {
+    
+        let quant = parseInt(quantity, 10) || 1;
+    
+        try {
+            const newItem = await databases.createDocument(
+                config.databaseId,
+                config.itemCollectionId,
+                ID.unique(),
+                {
+                    name: name,
+                    expiry: expiry,
+                    quantity: quant,
+                    userId: userId
+                }
+            );
+            
+        return newItem as IItem;
+        }
+        catch (error) {
+            console.log(error);
+            throw new Error((error as Error).message);
+        }
+    },
+    
+    getAllItems : async (userId: string): Promise<IItem[]> => {
+        try {
+            const posts = await databases.listDocuments<IItem>(
+                config.databaseId,
+                config.itemCollectionId,
+                [Query.equal('userId', userId), Query.orderAsc('expiry')]
+            )
+    
+            return posts.documents;
+        } catch (error) {
+            throw new Error((error as Error).message);
+        }
+    },
+    
+    deleteItem : async (itemId: string): Promise<void> => {
+        try {
+            await databases.deleteDocument(config.databaseId, config.itemCollectionId, itemId);
+        }
+        catch (error) {
+            throw new Error((error as Error).message);
+        }
     }
 }
 

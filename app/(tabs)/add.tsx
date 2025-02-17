@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import DateTimePicker from 'react-native-ui-datepicker';
 import CustomButton from '@/components/CustomButton';
 import { useGlobalContext } from '@/context/GlobalProvider';
-import { createItem } from '@/lib/appwrite';
+import { appwrite } from '@/lib/appwrite';
 import NumberInput from '@/components/NumberInput';
 import Icon from 'react-native-vector-icons/AntDesign';
 import { IItem } from '@/interfaces/IItem';
@@ -33,7 +33,7 @@ export default function Add() {
     setSubmitting(true);
 
     try {
-      let item = await createItem(form.title, form.expiry, form.quantity, user.$id);
+      let item = await appwrite.createItem(form.title, form.expiry, form.quantity, user.$id);
 
       setGlobalItems((prevItems: IItem[] | null) => {
         // If prevItems is null, initialize it as an empty array, then add the new item
