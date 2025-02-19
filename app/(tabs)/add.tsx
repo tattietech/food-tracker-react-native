@@ -21,6 +21,8 @@ export default function Add() {
   const [scanning, setScanning] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [enterManually, setEnterManually] = useState(false);
+  const [createFoodSpace, setCreateFoodSpace] = useState(false);
+  const [newFoodSpace, setNewFoodSpace] = useState("");
   const [foodSpaces, setFoodSpaces] = useState<IFoodSpace[]>([]);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [selectedFoodSpace, setSelectedFoodSpace] = useState("");
@@ -53,7 +55,7 @@ export default function Add() {
       }))
     );
 
-    setSelectedFoodSpace(foodSpaces[0]?.$id);
+    //setSelectedFoodSpace(foodSpaces[0]?.$id);
   }, [foodSpaces]);
 
   useEffect(() => {
@@ -63,6 +65,8 @@ export default function Add() {
       foodSpaceName: name ?? "",
       foodSpaceId: selectedFoodSpace ?? ""
     });
+
+    console.log("selected food space updated: " + form.foodSpaceId + form.foodSpaceName);
   }, [selectedFoodSpace]);
 
 
@@ -84,8 +88,23 @@ export default function Add() {
     setSubmitting(true);
 
     try {
+      let finalFoodSpaceId = selectedFoodSpace;
+      let finalFoodSpaceName = foodSpaces.find(fs => fs.$id == selectedFoodSpace)?.name ?? "";
+
+      if (createFoodSpace) {
+        let nfs = await appwrite.createFoodSpace(newFoodSpace, user.activeHouseholdId);
+        finalFoodSpaceId = nfs.$id;
+        finalFoodSpaceName = newFoodSpace;
+
+        // Add new food space to state
+        setFoodSpaces(prev => [...prev, nfs]);
+        setFoodSpacePickerItems(prev => [...prev, { label: nfs.name, value: nfs.$id }]);
+        setCreateFoodSpace(false);
+        setSelectedFoodSpace(nfs.$id);
+      }
+
       let item = await appwrite.createFoodItem(form.title, form.expiry, form.quantity, user.activeHouseholdId,
-        form.foodSpaceId, form.foodSpaceName);
+        finalFoodSpaceId, finalFoodSpaceName);
 
       setGlobalItems((prevItems: IItem[] | null) => {
         // If prevItems is null, initialize it as an empty array, then add the new item
@@ -114,7 +133,7 @@ export default function Add() {
 
 
   return (
-    <TouchableWithoutFeedback onPress={() => { Keyboard.dismiss(); setEnterManually(false) }} accessible={false}>
+    <TouchableWithoutFeedback onPress={() => { Keyboard.dismiss(); setEnterManually(false); setPickerOpen(false) }} accessible={false}>
       <SafeAreaView className="h-screen bg-white">
         {scanning && <Scanner setScanning={setScanning} setForm={setForm} form={form} />}
         {!scanning && <View className="px-4 h-full">
@@ -167,14 +186,30 @@ export default function Add() {
 
             <View className="z-10">
               <Text className="text-base font-pmedium ml-2">Food Space</Text>
-              <DropDownPicker
-                open={pickerOpen}
-                value={selectedFoodSpace}
-                items={foodSpacePickerItems}
-                setOpen={setPickerOpen}
-                setValue={setSelectedFoodSpace}
-                multiple={false}
-              />
+              {createFoodSpace ?
+                (
+                  <View>
+                  <FormField
+                    value={newFoodSpace}
+                    handleChangeText={(e) => setNewFoodSpace(e)}
+                  />
+                  <CustomButton title="Pick from list" handlePress={() => {setCreateFoodSpace(false)}} />
+                  </View>
+                )
+                :
+                (<View>
+                  <DropDownPicker
+                    open={pickerOpen}
+                    value={selectedFoodSpace}
+                    items={foodSpacePickerItems}
+                    setOpen={setPickerOpen}
+                    setValue={setSelectedFoodSpace}
+                    multiple={false}
+                  />
+                  <CustomButton title="Create new Food Space" handlePress={() => {setCreateFoodSpace(true)}} />
+                </View>
+                )
+              }
             </View>
 
             <View>

@@ -2,7 +2,7 @@ import { View, Text, TextInput, TouchableOpacity, Image, KeyboardTypeOptions } f
 import React, { useState } from 'react'
 
 interface FormFieldProps {
-    title: string;
+    title?: string;
     value: string;
     placeholder?: string;
     handleChangeText: (text: string) => void;
@@ -15,7 +15,7 @@ const FormField = (props : FormFieldProps) => {
 
     return (
         <View className={`space-y-2 ${props.otherStyles}`}>
-            <Text className="text-base font-pmedium ml-2">{props.title}</Text>
+            {props.title && <Text className="text-base font-pmedium ml-2">{props.title}</Text>}
 
             <View className="border-2 w-full h-16 px-4
             rounded-2xl focus:border-secondary items-center flex-row">
