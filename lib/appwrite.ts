@@ -1,5 +1,8 @@
 
+import { IFoodSpace } from '@/interfaces/IFoodSpace';
+import { IHousehold } from '@/interfaces/IHousehold';
 import { IItem } from '@/interfaces/IItem';
+import { IUser } from '@/interfaces/IUser';
 import { Account, Avatars, Client, Databases, ID, Query } from 'react-native-appwrite'
 
 export const config = {
@@ -7,8 +10,10 @@ export const config = {
     platform: 'com.ab.food-tracker',
     projectId: '67058f95000e4e73c08c',
     databaseId: 'food-tracker-db',
-    userCollectionId: '67059541002ed2bc3832',
-    itemCollectionId: '670596010025f0b9a6ce'
+    userCollectionId: '67b335ef0005007ac675',
+    itemCollectionId: '670596010025f0b9a6ce',
+    foodSpaceCollectionId: '67b31600002018a89402',
+    householdCollectionId: '67b336b9002d6f610161'
 }
 
 // Init your React Native SDK
@@ -30,6 +35,7 @@ export const appwrite = {
             const session = await account.createEmailPasswordSession(email, password);
             return session;
         } catch (error) {
+            console.log("attempted to sign in");
             throw new Error((error as Error).message)
         }
     },
@@ -45,10 +51,14 @@ export const appwrite = {
             );
     
             if (!newAccount) throw Error;
+            await appwrite.signIn(email, password);
+
+            const household = await appwrite.createHousehold(`${name}'s house`, newAccount.$id);
+            
+            await appwrite.createFoodSpace("Fridge", household.$id);
     
             const avatarUrl = avatars.getInitials(name);
-    
-            await appwrite.signIn(email, password);
+
     
             const newUser = await databases.createDocument(
                 config.databaseId,
@@ -58,7 +68,8 @@ export const appwrite = {
                     accountId: newAccount.$id,
                     email: email,
                     name: name,
-                    avatar: avatarUrl
+                    avatar: avatarUrl,
+                    activeHouseholdId: household.$id
                 }
             );
     
@@ -70,13 +81,12 @@ export const appwrite = {
         }
     },
     
-    getCurrentUser : async () => {
+    getCurrentUser : async (): Promise<IUser> => {
         try {
             const currentAccount = await account.get();
-    
             if (!currentAccount) throw Error;
     
-            const currentUser = await databases.listDocuments(
+            const currentUser = await databases.listDocuments<IUser>(
                 config.databaseId,
                 config.userCollectionId,
                 [Query.equal("accountId", currentAccount.$id)]
@@ -86,7 +96,8 @@ export const appwrite = {
     
             return currentUser.documents[0];
         } catch (error) {
-            console.log(error)
+            console.log("attempted get user");
+            throw new Error((error as Error).message);
         }
     },
     
@@ -101,10 +112,10 @@ export const appwrite = {
         }
     },
     
-    createItem : async (name:string, expiry:Date, quantity:string, userId:string): Promise<IItem> => {
+    createFoodItem : async (name:string, expiry:Date, quantity:string, householdId: string, foodSpaceId: string, foodSpaceName: string): Promise<IItem> => {
     
         let quant = parseInt(quantity, 10) || 1;
-    
+        console.log("appwrite.ts : foodspaceID : " + foodSpaceId);
         try {
             const newItem = await databases.createDocument(
                 config.databaseId,
@@ -114,7 +125,9 @@ export const appwrite = {
                     name: name,
                     expiry: expiry,
                     quantity: quant,
-                    userId: userId
+                    householdId: householdId,
+                    foodSpaceId: foodSpaceId,
+                    foodSpaceName: foodSpaceName
                 }
             );
             
@@ -125,16 +138,82 @@ export const appwrite = {
             throw new Error((error as Error).message);
         }
     },
+
+    createFoodSpace : async (name:string, householdId: string): Promise<IFoodSpace> => {
+        try {
+            const newSpace = await databases.createDocument<IFoodSpace>(
+                config.databaseId,
+                config.foodSpaceCollectionId,
+                ID.unique(),
+                {
+                    name: name,
+                    householdId: householdId
+                }
+            );
+            
+        return newSpace;
+        }
+        catch (error) {
+            console.log(error);
+            throw new Error((error as Error).message);
+        }
+    },
     
-    getAllItems : async (userId: string): Promise<IItem[]> => {
+    getAllItems : async (householdId: string): Promise<IItem[]> => {
         try {
             const posts = await databases.listDocuments<IItem>(
                 config.databaseId,
                 config.itemCollectionId,
-                [Query.equal('userId', userId), Query.orderAsc('expiry')]
+                [Query.equal('householdId', householdId), Query.orderAsc('expiry')]
             )
     
             return posts.documents;
+        } catch (error) {
+            throw new Error((error as Error).message);
+        }
+    },
+
+    getAllItemsForFoodSpace : async (foodSpaceId: string): Promise<IItem[]> => {
+        try {
+            const posts = await databases.listDocuments<IItem>(
+                config.databaseId,
+                config.itemCollectionId,
+                [Query.equal('foodSpaceId', foodSpaceId), Query.orderAsc('expiry')]
+            )
+    
+            return posts.documents;
+        } catch (error) {
+            throw new Error((error as Error).message);
+        }
+    },
+
+    getAllFoodSpacesAndItemsForHousehold : async (householdId: string): Promise<IFoodSpace[]> => {
+        try {
+            const foodSpaces = await databases.listDocuments<IFoodSpace>(
+                config.databaseId,
+                config.foodSpaceCollectionId,
+                [Query.equal('householdId', householdId)]
+            )
+
+            for(const foodSpace of foodSpaces.documents) {
+                foodSpace.items = await appwrite.getAllItemsForFoodSpace(foodSpace.$id);
+            }
+    
+            return foodSpaces.documents;
+        } catch (error) {
+            throw new Error((error as Error).message);
+        }
+    },
+
+    getAllFoodSpacesForHousehold : async (householdId: string): Promise<IFoodSpace[]> => {
+        try {
+            const foodSpaces = await databases.listDocuments<IFoodSpace>(
+                config.databaseId,
+                config.foodSpaceCollectionId,
+                [Query.equal('householdId', householdId)]
+            )
+    
+            return foodSpaces.documents;
         } catch (error) {
             throw new Error((error as Error).message);
         }
@@ -145,6 +224,35 @@ export const appwrite = {
             await databases.deleteDocument(config.databaseId, config.itemCollectionId, itemId);
         }
         catch (error) {
+            throw new Error((error as Error).message);
+        }
+    },
+    createHousehold : async (name:string, userId:string): Promise<IHousehold> => {
+        try {
+            const newHouse = await databases.createDocument(
+                config.databaseId,
+                config.householdCollectionId,
+                ID.unique(),
+                {
+                    name: name,
+                    users: [userId]
+                }
+            );
+            
+        return newHouse as IHousehold;
+        }
+        catch (error) {
+            console.log(error);
+            throw new Error((error as Error).message);
+        }
+    },
+
+    setCurrentUserHousehold : async (userId: string, houseId:string) : Promise<void> => {
+        try {
+            await databases.updateDocument(config.databaseId, config.userCollectionId, userId, )
+        }
+        catch(error) {
+            console.log(error);
             throw new Error((error as Error).message);
         }
     }

@@ -1,4 +1,4 @@
-import { Alert, FlatList, SafeAreaView, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, FlatList, SafeAreaView, SectionList, Text, TouchableOpacity, View } from 'react-native';
 import { useGlobalContext } from '../../context/GlobalProvider'
 import useAppwrite from '@/lib/useAppwrite';
 import { appwrite } from '@/lib/appwrite';
@@ -12,17 +12,20 @@ import Reanimated, {
   SharedValue,
   useAnimatedStyle,
 } from 'react-native-reanimated';
+import { Section } from '@/interfaces/ISection';
 
 export default function Home() {
   const { globalItems, setGlobalItems, user } = useGlobalContext();
-  
+  const [groupedItems, setGroupedItems] = useState<Section[]>([]);
+
   const getAllItems = async (): Promise<IItem[]> => {
-    return await appwrite.getAllItems(user.$id);
+    return await appwrite.getAllItems(user.activeHouseholdId);
   };
 
   const deleteItem = async (itemId: string): Promise<void> => {
     await appwrite.deleteItem(itemId);
-    setGlobalItems(data?.filter(d => d.$id == itemId));
+    setGlobalItems((globalItems as IItem[])?.filter(d => d.$id !== itemId));
+
     refetch();
   }
 
@@ -30,12 +33,41 @@ export default function Home() {
 
   const [refreshing, setRefreshing] = useState(false);
 
+  useEffect(() => {
+    setGroupedItems(mapItemsToSections());
+  }, [globalItems]);
+
+  const mapItemsToSections = (): Section[] => {
+    const groupedItems: Record<string, IItem[]> = {};
+
+    if (globalItems == null) {
+      return Object.keys(groupedItems).map((foodSpaceName) => ({
+        title: foodSpaceName,
+        data: groupedItems[foodSpaceName], // Sort by expiry
+      }));
+    }
+
+    // Group items by `foodSpaceName`
+    (globalItems as IItem[]).forEach((item) => {
+      if (!groupedItems[item.foodSpaceName]) {
+        groupedItems[item.foodSpaceName] = [];
+      }
+      groupedItems[item.foodSpaceName].push(item);
+    });
+
+    // Convert grouped object into SectionList format
+    return Object.keys(groupedItems).map((foodSpaceName) => ({
+      title: foodSpaceName,
+      data: groupedItems[foodSpaceName], // Sort by expiry
+    }));
+  };
+
   const onRefresh = async () => {
     setRefreshing(true);
     await refetch();
     setRefreshing(false);
   }
-  
+
   useEffect(() => {
     onRefresh();
   }, []);
@@ -46,53 +78,51 @@ export default function Home() {
     }
   }, [data]);
 
-  
-const rightAction = (itemId: string) =>
-  (prog: SharedValue<number>, drag: SharedValue<number>) => {
-  const styleAnimation = useAnimatedStyle(() => {
-    return {
-      transform: [{ translateX: drag.value + 70 }],
-    };
-  });
 
-  return (
-    <TouchableOpacity onPress={() => deleteItem(itemId)}>
-    <Reanimated.View className="bg-red h-24 px-4 items-center flex-row">
-      <Text className="text-white">Delete</Text>
-    </Reanimated.View>
-    </TouchableOpacity>
-  );
-}
+  const rightAction = (itemId: string) =>
+    (prog: SharedValue<number>, drag: SharedValue<number>) => {
+      const styleAnimation = useAnimatedStyle(() => {
+        return {
+          transform: [{ translateX: drag.value + 70 }],
+        };
+      });
 
+      return (
+        <TouchableOpacity onPress={() => deleteItem(itemId)}>
+          <Reanimated.View className="bg-red h-24 px-4 items-center flex-row">
+            <Text className="text-white">Delete</Text>
+          </Reanimated.View>
+        </TouchableOpacity>
+      );
+    }
   return (
     <SafeAreaView className="h-full bg-white">
       <Text className="text-2xl text-center font-psemibolds">
-          Items
-        </Text>
-      <FlatList
-      className="mt-10"
-        data={globalItems}
+        Items
+      </Text>
+
+      <SectionList
+        className="mt-10"
+        sections={groupedItems}
         keyExtractor={(item) => item.$id}
-        renderItem={({item}) => (
+        renderItem={({ item }) => (
           <GestureHandlerRootView>
-      <ReanimatedSwipeable
-        friction={2}
-        enableTrackpadTwoFingerGesture
-        rightThreshold={40}
-        renderRightActions={rightAction(item.$id)}>
-        <Item name={item.name} quantity={item.quantity} expiry={item.expiry}/>
-      </ReanimatedSwipeable>
-    </GestureHandlerRootView>
+            <ReanimatedSwipeable
+              friction={2}
+              enableTrackpadTwoFingerGesture
+              rightThreshold={40}
+              renderRightActions={rightAction(item.$id)}>
+              <Item name={item.name} quantity={item.quantity} expiry={item.expiry} />
+            </ReanimatedSwipeable>
+          </GestureHandlerRootView>
         )}
-        // ListHeaderComponent={() => (
-        //   <Text>Filter and seach bar</Text>
-        // )}
-        ListEmptyComponent={() => (
-          <Text>Nae items yet pal</Text>
+        renderSectionHeader={({ section: { title } }) => (
+          <View className="bg-gray-200 p-2">
+            <Text className="text-lg font-bold">{title}</Text>
+          </View>
         )}
-        refreshControl={<RefreshControl 
-          refreshing={refreshing}
-          onRefresh={onRefresh}/>}
+        ListEmptyComponent={() => <Text>Nae items yet pal</Text>}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       />
     </SafeAreaView>
   );

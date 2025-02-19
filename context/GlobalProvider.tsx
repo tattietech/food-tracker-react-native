@@ -2,6 +2,8 @@ import { createContext, useContext, useState, useEffect } from "react";
 import { appwrite } from "../lib/appwrite";
 import { IItem } from "../interfaces/IItem";
 import { IAppWriteDocument } from "@/interfaces/IAppWriteDocument";
+import { IHousehold } from "@/interfaces/IHousehold";
+import { IUser } from "@/interfaces/IUser";
 
 // default null context
 export const def : any = null;
@@ -13,7 +15,7 @@ interface GlobalProviderProps {
 }
 const GlobalProvider = (props: GlobalProviderProps) => {
 const [isLoggedIn, setIsLoggedIn] = useState(false);
-const [user, setUser] = useState<IAppWriteDocument | null>(null)
+const [user, setUser] = useState<IUser | null>(null)
 const [isLoading, setIsLoading] = useState(true);
 const [globalItems, setGlobalItems] = useState<IItem[] | null>(null);
 

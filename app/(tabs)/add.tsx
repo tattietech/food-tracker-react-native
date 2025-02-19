@@ -1,5 +1,5 @@
 import { Alert, Keyboard, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Scanner from '../../components/Scanner'
 import FormField from '@/components/FormField';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,19 +10,70 @@ import { appwrite } from '@/lib/appwrite';
 import NumberInput from '@/components/NumberInput';
 import Icon from 'react-native-vector-icons/AntDesign';
 import { IItem } from '@/interfaces/IItem';
+import { Picker } from '@react-native-picker/picker';
+import { IFoodSpace } from '@/interfaces/IFoodSpace';
+import useAppwrite from '@/lib/useAppwrite';
+import DropDownPicker from 'react-native-dropdown-picker';
 
 
 export default function Add() {
-  const { user, globalItems, setGlobalItems } = useGlobalContext();
+  const { user, setGlobalItems } = useGlobalContext();
   const [scanning, setScanning] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [enterManually, setEnterManually] = useState(false);
+  const [foodSpaces, setFoodSpaces] = useState<IFoodSpace[]>([]);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [selectedFoodSpace, setSelectedFoodSpace] = useState("");
+  const [foodSpacePickerItems, setFoodSpacePickerItems] = useState<{ label: string; value: string }[]>([]);
+
+  const getFoodSpaces = async (): Promise<IFoodSpace[]> => {
+    return await appwrite.getAllFoodSpacesForHousehold(user.activeHouseholdId);
+  };
+
+  useEffect(() => {
+    const fetchFoodSpaces = async () => {
+      try {
+        const data = await getFoodSpaces();
+        setFoodSpaces(data);
+      } catch (error) {
+        console.error("Error fetching food spaces:", error);
+      }
+    };
+
+    fetchFoodSpaces();
+
+    console.log();
+  }, []);
+
+  useEffect(() => {
+    setFoodSpacePickerItems(
+      foodSpaces.map(fs => ({
+        label: fs.name,
+        value: fs.$id
+      }))
+    );
+
+    setSelectedFoodSpace(foodSpaces[0]?.$id);
+  }, [foodSpaces]);
+
+  useEffect(() => {
+    var name = foodSpaces.find(fs => fs.$id == selectedFoodSpace)?.name;
+    setForm({
+      ...form,
+      foodSpaceName: name ?? "",
+      foodSpaceId: selectedFoodSpace ?? ""
+    });
+  }, [selectedFoodSpace]);
+
 
   const [form, setForm] = useState({
     title: "",
     expiry: new Date(),
     quantity: "1",
-  })
+    foodSpaceId: "",
+    foodSpaceName: ""
+  }
+  )
 
   const submit = async () => {
     if (!form.title || !form.expiry || !form.quantity) {
@@ -33,7 +84,8 @@ export default function Add() {
     setSubmitting(true);
 
     try {
-      let item = await appwrite.createItem(form.title, form.expiry, form.quantity, user.$id);
+      let item = await appwrite.createFoodItem(form.title, form.expiry, form.quantity, user.activeHouseholdId,
+        form.foodSpaceId, form.foodSpaceName);
 
       setGlobalItems((prevItems: IItem[] | null) => {
         // If prevItems is null, initialize it as an empty array, then add the new item
@@ -46,7 +98,9 @@ export default function Add() {
       setForm({
         title: "",
         expiry: new Date(),
-        quantity: "1"
+        quantity: "1",
+        foodSpaceId: selectedFoodSpace ?? "",
+        foodSpaceName: foodSpaces.find(fs => fs.$id == selectedFoodSpace)?.name ?? ""
       });
       Alert.alert("Item added");
     }
@@ -60,71 +114,83 @@ export default function Add() {
 
 
   return (
-    <TouchableWithoutFeedback onPress={() => {Keyboard.dismiss(); setEnterManually(false)}} accessible={false}>
-    <SafeAreaView className="h-screen bg-white">
-      {scanning && <Scanner setScanning={setScanning} setForm={setForm} form={form} />}
-      {!scanning && <View className="px-4 h-full">
-        <Text className="text-2xl text-center font-psemibolds">
-          Add New Item
-        </Text>
-        <View className="mt-6 flex flex-col space-y-8">
-          <View>
-            <FormField
-              title="Title"
-              value={form.title}
-              placeholder="The items name"
-              handleChangeText={(e) => setForm({ ...form, title: e })}
-            />
-          </View>
-
-          <View>
-            <Text className="text-base font-pmedium ml-2">Expiry Date</Text>
-
-            <View className="flex flex-row items-center mt-2 border-2 rounded-xl h-16 px-4">
-              <TouchableOpacity className="h-full w-full flex-row items-center" onPress={() => {setEnterManually(!enterManually)}}>
-                <Text className="text-base font-pmedium">{new Date(form.expiry).toLocaleDateString()}</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={() => { setScanning(true) }}
-                activeOpacity={0.7}
-                className="bg-primary flex-row space-x-2 px-2 h-12 w-28 rounded-xl justify-center items-center absolute right-1"
-              >
-                <Icon name="camera" color="white" size={30} />
-                <Text className="text-white">Scan</Text>
-              </TouchableOpacity>
+    <TouchableWithoutFeedback onPress={() => { Keyboard.dismiss(); setEnterManually(false) }} accessible={false}>
+      <SafeAreaView className="h-screen bg-white">
+        {scanning && <Scanner setScanning={setScanning} setForm={setForm} form={form} />}
+        {!scanning && <View className="px-4 h-full">
+          <Text className="text-2xl text-center font-psemibolds">
+            Add New Item
+          </Text>
+          <View className="mt-6 flex flex-col space-y-8">
+            <View>
+              <FormField
+                title="Title"
+                value={form.title}
+                placeholder="The items name"
+                handleChangeText={(e) => setForm({ ...form, title: e })}
+              />
             </View>
 
-            {enterManually &&
-              <DateTimePicker
-                mode="single"
-                date={form.expiry}
-                onChange={(e) => {
-                  if (!e.date) {
-                    return;
-                  }
+            <View>
+              <Text className="text-base font-pmedium ml-2">Expiry Date</Text>
 
-                  setForm({ ...form, expiry: e.date as Date })
-                  setEnterManually(false);
-                }}
+              <View className="flex flex-row items-center mt-2 border-2 rounded-xl h-16 px-4">
+                <TouchableOpacity className="h-full w-full flex-row items-center" onPress={() => { setEnterManually(!enterManually) }}>
+                  <Text className="text-base font-pmedium">{new Date(form.expiry).toLocaleDateString()}</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() => { setScanning(true) }}
+                  activeOpacity={0.7}
+                  className="bg-primary flex-row space-x-2 px-2 h-12 w-28 rounded-xl justify-center items-center absolute right-1"
+                >
+                  <Icon name="camera" color="white" size={30} />
+                  <Text className="text-white">Scan</Text>
+                </TouchableOpacity>
+              </View>
+
+              {enterManually &&
+                <DateTimePicker
+                  mode="single"
+                  date={form.expiry}
+                  onChange={(e) => {
+                    if (!e.date) {
+                      return;
+                    }
+
+                    setForm({ ...form, expiry: e.date as Date })
+                    setEnterManually(false);
+                  }}
+                />
+              }
+            </View>
+
+            <View className="z-10">
+              <Text className="text-base font-pmedium ml-2">Food Space</Text>
+              <DropDownPicker
+                open={pickerOpen}
+                value={selectedFoodSpace}
+                items={foodSpacePickerItems}
+                setOpen={setPickerOpen}
+                setValue={setSelectedFoodSpace}
+                multiple={false}
               />
-            }
+            </View>
+
+            <View>
+              <Text className="text-base font-pmedium ml-2">Quantity</Text>
+              <NumberInput form={form} setForm={setForm} />
+            </View>
           </View>
 
-          <View>
-            <Text className="text-base font-pmedium ml-2">Quantity</Text>
-            <NumberInput form={form} setForm={setForm} />
-          </View>
-        </View>
-
-        <CustomButton
+          <CustomButton
             title="Add Item"
             handlePress={submit}
             isLoading={submitting}
             containerStyles="mt-8 absolute bottom-20 w-full justify-center self-center"
           />
-      </View>}
-    </SafeAreaView>
+        </View>}
+      </SafeAreaView>
     </TouchableWithoutFeedback>
   )
 }

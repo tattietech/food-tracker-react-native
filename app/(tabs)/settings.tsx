@@ -23,8 +23,17 @@ export default function Settings() {
         </Text>
         <DividerLine fullWidth={true}/>
         <FlatList
-        data={["Account", "Log Out"]}
-        renderItem={({item}) => <MenuItem onPress={item == "Log Out" ? logOut : logOut} name={item} />}
+        data={[
+          {
+            title: "Account",
+            action: () => {console.log("account")}
+          },
+          {
+            title: "Log Out",
+            action: logOut
+          }
+        ]}
+        renderItem={({item}) => <MenuItem onPress={item.action} name={item.title} />}
         className="mt-5"
       />
     </SafeAreaView>
