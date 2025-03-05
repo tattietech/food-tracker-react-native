@@ -1,4 +1,5 @@
 
+import { useGlobalContext } from '@/context/GlobalProvider';
 import { IFoodSpace } from '@/interfaces/IFoodSpace';
 import { IHousehold } from '@/interfaces/IHousehold';
 import { IItem } from '@/interfaces/IItem';
@@ -27,7 +28,7 @@ client
 const account = new Account(client);
 const avatars = new Avatars(client);
 const databases = new Databases(client);
-// const storage = new Storage(client);
+
 
 export const appwrite = {
     signIn : async (email:string, password:string) => {
@@ -141,6 +142,7 @@ export const appwrite = {
 
     createFoodSpace : async (name:string, householdId: string): Promise<IFoodSpace> => {
         try {
+            console.log("creating food space" + name + " " + householdId);
             const newSpace = await databases.createDocument<IFoodSpace>(
                 config.databaseId,
                 config.foodSpaceCollectionId,
@@ -187,6 +189,28 @@ export const appwrite = {
         }
     },
 
+    foodSpaceContainsItems : async (foodSpaceId: string): Promise<boolean> => {
+        try {
+            const item = await databases.listDocuments<IItem>(
+                config.databaseId,
+                config.itemCollectionId,
+                [
+                    Query.equal('foodSpaceId', foodSpaceId), Query.orderAsc('expiry'),
+                    Query.limit(1)
+                ]
+            )
+
+            if (item.documents.length > 0) {
+                return true;
+            }
+
+            return false;
+        }
+        catch(error) {
+            throw new Error((error as Error).message);
+        }
+    },
+
     getAllFoodSpacesAndItemsForHousehold : async (householdId: string): Promise<IFoodSpace[]> => {
         try {
             const foodSpaces = await databases.listDocuments<IFoodSpace>(
@@ -222,6 +246,21 @@ export const appwrite = {
     deleteItem : async (itemId: string): Promise<void> => {
         try {
             await databases.deleteDocument(config.databaseId, config.itemCollectionId, itemId);
+        }
+        catch (error) {
+            throw new Error((error as Error).message);
+        }
+    },
+    deleteFoodSpace : async (spaceId: string): Promise<void> => {
+        try {
+
+            const items = await appwrite.getAllItemsForFoodSpace(spaceId);
+
+            items.forEach(async item => {
+                await databases.deleteDocument(config.databaseId, config.itemCollectionId, item.$id);
+            });
+
+            await databases.deleteDocument(config.databaseId, config.foodSpaceCollectionId, spaceId);
         }
         catch (error) {
             throw new Error((error as Error).message);

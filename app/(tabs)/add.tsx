@@ -14,10 +14,11 @@ import { Picker } from '@react-native-picker/picker';
 import { IFoodSpace } from '@/interfaces/IFoodSpace';
 import useAppwrite from '@/lib/useAppwrite';
 import DropDownPicker from 'react-native-dropdown-picker';
+import PageHeader from '@/components/PageHeader';
 
 
 export default function Add() {
-  const { user, setGlobalItems } = useGlobalContext();
+  const { user, setGlobalItems, globalFoodSpaces, setGlobalFoodSpaces } = useGlobalContext();
   const [scanning, setScanning] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [enterManually, setEnterManually] = useState(false);
@@ -37,6 +38,7 @@ export default function Add() {
       try {
         const data = await getFoodSpaces();
         setFoodSpaces(data);
+        setGlobalFoodSpaces(data);
       } catch (error) {
         console.error("Error fetching food spaces:", error);
       }
@@ -48,15 +50,20 @@ export default function Add() {
   }, []);
 
   useEffect(() => {
-    setFoodSpacePickerItems(
-      foodSpaces.map(fs => ({
-        label: fs.name,
-        value: fs.$id
-      }))
-    );
+    if (foodSpaces) {
+      setFoodSpacePickerItems(
+        foodSpaces.map(fs => ({
+          label: fs.name,
+          value: fs.$id
+        }))
+      );
+    }
 
-    //setSelectedFoodSpace(foodSpaces[0]?.$id);
   }, [foodSpaces]);
+
+  useEffect(() => {
+    setFoodSpaces(globalFoodSpaces);
+  }, [globalFoodSpaces]);
 
   useEffect(() => {
     var name = foodSpaces.find(fs => fs.$id == selectedFoodSpace)?.name;
@@ -97,7 +104,11 @@ export default function Add() {
         finalFoodSpaceName = newFoodSpace;
 
         // Add new food space to state
-        setFoodSpaces(prev => [...prev, nfs]);
+        setGlobalFoodSpaces((prevItems: IFoodSpace[] | null) => {
+          // If prevItems is null, initialize it as an empty array, then add the new item
+          return prevItems ? [...prevItems, nfs] : [nfs];
+        });
+
         setFoodSpacePickerItems(prev => [...prev, { label: nfs.name, value: nfs.$id }]);
         setCreateFoodSpace(false);
         setSelectedFoodSpace(nfs.$id);
@@ -137,9 +148,7 @@ export default function Add() {
       <SafeAreaView className="h-screen bg-white">
         {scanning && <Scanner setScanning={setScanning} setForm={setForm} form={form} />}
         {!scanning && <View className="px-4 h-full">
-          <Text className="text-2xl text-center font-psemibolds">
-            Add New Item
-          </Text>
+          <PageHeader title="Add New Item" />
           <View className="mt-6 flex flex-col space-y-8">
             <View>
               <FormField
@@ -206,7 +215,7 @@ export default function Add() {
                     setValue={setSelectedFoodSpace}
                     multiple={false}
                   />
-                  <CustomButton title="Create new Food Space" handlePress={() => {setCreateFoodSpace(true)}} />
+                  <CustomButton containerStyles="mt-2" title="Create new Food Space" handlePress={() => {setCreateFoodSpace(true)}} />
                 </View>
                 )
               }

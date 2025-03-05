@@ -1,9 +1,8 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { appwrite } from "../lib/appwrite";
 import { IItem } from "../interfaces/IItem";
-import { IAppWriteDocument } from "@/interfaces/IAppWriteDocument";
-import { IHousehold } from "@/interfaces/IHousehold";
 import { IUser } from "@/interfaces/IUser";
+import { IFoodSpace } from "@/interfaces/IFoodSpace";
 
 // default null context
 export const def : any = null;
@@ -18,6 +17,7 @@ const [isLoggedIn, setIsLoggedIn] = useState(false);
 const [user, setUser] = useState<IUser | null>(null)
 const [isLoading, setIsLoading] = useState(true);
 const [globalItems, setGlobalItems] = useState<IItem[] | null>(null);
+const [globalFoodSpaces, setGlobalFoodSpaces] = useState<IFoodSpace[] | null>(null)
 
 useEffect(() => {
     appwrite.getCurrentUser()
@@ -48,7 +48,9 @@ useEffect(() => {
                 setUser,
                 isLoading,
                 globalItems,
-                setGlobalItems
+                setGlobalItems,
+                globalFoodSpaces,
+                setGlobalFoodSpaces
             }}
         >
             {props.children}

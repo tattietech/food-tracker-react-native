@@ -13,6 +13,7 @@ import Reanimated, {
   useAnimatedStyle,
 } from 'react-native-reanimated';
 import { Section } from '@/interfaces/ISection';
+import PageHeader from '@/components/PageHeader';
 
 export default function Home() {
   const { globalItems, setGlobalItems, user } = useGlobalContext();
@@ -97,9 +98,7 @@ export default function Home() {
     }
   return (
     <SafeAreaView className="h-full bg-white">
-      <Text className="text-2xl text-center font-psemibolds">
-        Items
-      </Text>
+      <PageHeader title="Home" />
 
       <SectionList
         className="mt-10"
