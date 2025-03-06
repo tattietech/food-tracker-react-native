@@ -101,7 +101,7 @@ export default function Home() {
       <PageHeader title="Home" />
 
       <SectionList
-        className="mt-10"
+        className="mt-0"
         sections={groupedItems}
         keyExtractor={(item) => item.$id}
         renderItem={({ item }) => (

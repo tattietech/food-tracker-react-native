@@ -1,5 +1,5 @@
 import { Alert, Keyboard, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import Scanner from '../../components/Scanner'
 import FormField from '@/components/FormField';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,11 +8,8 @@ import CustomButton from '@/components/CustomButton';
 import { useGlobalContext } from '@/context/GlobalProvider';
 import { appwrite } from '@/lib/appwrite';
 import NumberInput from '@/components/NumberInput';
-
 import { IItem } from '@/interfaces/IItem';
-import { Picker } from '@react-native-picker/picker';
 import { IFoodSpace } from '@/interfaces/IFoodSpace';
-import useAppwrite from '@/lib/useAppwrite';
 import DropDownPicker from 'react-native-dropdown-picker';
 import PageHeader from '@/components/PageHeader';
 import { Icon } from '@/components/Icon';
@@ -62,7 +59,12 @@ export default function Add() {
         }))
       );
 
-      setFoodSpacePickerItems(prev => [...prev, { label: "Add new food space +", value: "newFoodSpace" }]);
+      setFoodSpacePickerItems(prev => [...prev, {
+        label: "Create New Food Space",
+        value: "newFoodSpace",
+        labelStyle: { fontSize: 16, color: "white" },
+        containerStyle: { borderTopWidth: 1, borderTopColor: "black", backgroundColor: "black" } 
+      }]);
     }
 
   }, [foodSpaces]);
@@ -161,9 +163,9 @@ export default function Add() {
     <TouchableWithoutFeedback onPress={() => { Keyboard.dismiss(); setEnterManually(false); setPickerOpen(false) }} accessible={false}>
       <SafeAreaView className="h-screen bg-white">
         {scanning && <Scanner setScanning={setScanning} setForm={setForm} form={form} />}
-        {!scanning && <View className="px-4 h-full">
+        {!scanning && <View className="h-full">
           <PageHeader title="Add New Item" />
-          <View className="mt-6 flex flex-col space-y-8">
+          <View className="mt-6 flex flex-col space-y-8 px-3">
             <View>
               <FormField
                 title="Title"
@@ -212,6 +214,7 @@ export default function Add() {
               {/* Text box to enter food space manually */}
               <View className={`flex flex-row ${createFoodSpace ? 'block' : 'hidden'}`}>
                 <FormField
+                 ref={newFoodSpaceTextBoxRef}
                   value={newFoodSpace}
                   handleChangeText={(e) => setNewFoodSpace(e)}
                   otherStyles="w-full"
@@ -220,6 +223,7 @@ export default function Add() {
                   onPress={() => {
                     setSelectedFoodSpace(foodSpaces[0].$id);
                     setCreateFoodSpace(false);
+                    Keyboard.dismiss()
                   }}
                   activeOpacity={0.7}
                   className="bg-white flex-row self-center space-x-2 px-2 h-12 rounded-xl justify-center items-center absolute right-2"
@@ -252,7 +256,7 @@ export default function Add() {
             title="Add Item"
             handlePress={submit}
             isLoading={submitting}
-            containerStyles="mt-8 absolute bottom-20 w-full justify-center self-center"
+            containerStyles="absolute bottom-10 w-full justify-center self-center"
           />
         </View>}
       </SafeAreaView>

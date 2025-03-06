@@ -37,26 +37,26 @@ export default function Settings() {
   //   }
   // }
 
-    const getAllFoodSpacesForHousehold = async (): Promise<IFoodSpace[]> => {
-        return await appwrite.getAllFoodSpacesForHousehold(user.activeHouseholdId); // Replace with actual household ID
-    }
+  const getAllFoodSpacesForHousehold = async (): Promise<IFoodSpace[]> => {
+    return await appwrite.getAllFoodSpacesForHousehold(user.activeHouseholdId); // Replace with actual household ID
+  }
 
-    const { data: foodSpaceListData, refetch: foodSpaceListRefetch } = useAppwrite<IFoodSpace[]>(getAllFoodSpacesForHousehold);
+  const { data: foodSpaceListData, refetch: foodSpaceListRefetch } = useAppwrite<IFoodSpace[]>(getAllFoodSpacesForHousehold);
 
-    const closeFoodSpaceModal = async () => {
-      await getAllFoodSpacesForHousehold();
-      foodSpaceListRefetch();
-      setCreateSpaceModalVisible(false);
-    };
-    
-    const createFoodSpace = async (name : string, householdId: string) => {
-      const newSpace = await appwrite.createFoodSpace(name, householdId);
-      setGlobalFoodSpaces((prevItems: IFoodSpace[] | null) => {
-        // If prevItems is null, initialize it as an empty array, then add the new item
-        return prevItems ? [...prevItems, newSpace] : [newSpace];
-      });
-    }
-    
+  const closeFoodSpaceModal = async () => {
+    await getAllFoodSpacesForHousehold();
+    foodSpaceListRefetch();
+    setCreateSpaceModalVisible(false);
+  };
+
+  const createFoodSpace = async (name: string, householdId: string) => {
+    const newSpace = await appwrite.createFoodSpace(name, householdId);
+    setGlobalFoodSpaces((prevItems: IFoodSpace[] | null) => {
+      // If prevItems is null, initialize it as an empty array, then add the new item
+      return prevItems ? [...prevItems, newSpace] : [newSpace];
+    });
+  }
+
 
   return (
     <SafeAreaView className="h-full bg-white">
@@ -77,7 +77,11 @@ export default function Settings() {
                 cancel={closeFoodSpaceModal}
                 visible={createSpaceModalVisible} actionButtonText="Create"
               />
-              <CustomButton title="Create Food Space" handlePress={() => {setCreateSpaceModalVisible(true)}}></CustomButton>
+              <CustomButton
+                title="Create Food Space"
+                containerStyles='rounded-0'
+                handlePress={() => { setCreateSpaceModalVisible(true) }
+                } />
             </>
           )
 

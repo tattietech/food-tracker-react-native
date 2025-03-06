@@ -1,5 +1,5 @@
 import { View, Text, TextInput, TouchableOpacity, Image, KeyboardTypeOptions } from 'react-native'
-import React, { useState } from 'react'
+import React, { LegacyRef, useState } from 'react'
 
 interface FormFieldProps {
     title?: string;
@@ -10,7 +10,7 @@ interface FormFieldProps {
     keyboardType?: KeyboardTypeOptions | undefined;
   }
 
-const FormField = (props : FormFieldProps) => {
+const FormField = React.forwardRef((props : FormFieldProps, ref:LegacyRef<TextInput>) => {
     const [showPassword, setshowPassword] = useState(false)
 
     return (
@@ -20,6 +20,7 @@ const FormField = (props : FormFieldProps) => {
             <View className="border-2 w-full h-16 px-4
             rounded-2xl focus:border-secondary items-center flex-row">
                 <TextInput
+                    ref={ref}
                     className="flex-1 font-psemibold text-base"
                     value={props.value}
                     placeholder={props.placeholder}
@@ -41,6 +42,6 @@ const FormField = (props : FormFieldProps) => {
             </View>
         </View>
     )
-}
+})
 
 export default FormField
