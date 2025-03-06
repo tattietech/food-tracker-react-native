@@ -1,5 +1,5 @@
 import { Alert, Keyboard, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import Scanner from '../../components/Scanner'
 import FormField from '@/components/FormField';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,13 +8,15 @@ import CustomButton from '@/components/CustomButton';
 import { useGlobalContext } from '@/context/GlobalProvider';
 import { appwrite } from '@/lib/appwrite';
 import NumberInput from '@/components/NumberInput';
-import Icon from 'react-native-vector-icons/AntDesign';
+
 import { IItem } from '@/interfaces/IItem';
 import { Picker } from '@react-native-picker/picker';
 import { IFoodSpace } from '@/interfaces/IFoodSpace';
 import useAppwrite from '@/lib/useAppwrite';
 import DropDownPicker from 'react-native-dropdown-picker';
 import PageHeader from '@/components/PageHeader';
+import { Icon } from '@/components/Icon';
+import { TextInput } from 'react-native-gesture-handler';
 
 
 export default function Add() {
@@ -28,6 +30,8 @@ export default function Add() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [selectedFoodSpace, setSelectedFoodSpace] = useState("");
   const [foodSpacePickerItems, setFoodSpacePickerItems] = useState<{ label: string; value: string }[]>([]);
+  const CREATE_FOOD_SPACE = "newFoodSpace";
+  const newFoodSpaceTextBoxRef = useRef<TextInput>(null);
 
   const getFoodSpaces = async (): Promise<IFoodSpace[]> => {
     return await appwrite.getAllFoodSpacesForHousehold(user.activeHouseholdId);
@@ -57,6 +61,8 @@ export default function Add() {
           value: fs.$id
         }))
       );
+
+      setFoodSpacePickerItems(prev => [...prev, { label: "Add new food space +", value: "newFoodSpace" }]);
     }
 
   }, [foodSpaces]);
@@ -66,14 +72,21 @@ export default function Add() {
   }, [globalFoodSpaces]);
 
   useEffect(() => {
+    if (selectedFoodSpace == CREATE_FOOD_SPACE) {
+      setCreateFoodSpace(true);
+      setSelectedFoodSpace(foodSpaces[0].$id);
+      if (newFoodSpaceTextBoxRef.current != null) {
+        newFoodSpaceTextBoxRef.current.focus();
+      }
+      return;
+    }
     var name = foodSpaces.find(fs => fs.$id == selectedFoodSpace)?.name;
     setForm({
       ...form,
       foodSpaceName: name ?? "",
       foodSpaceId: selectedFoodSpace ?? ""
     });
-
-    console.log("selected food space updated: " + form.foodSpaceId + form.foodSpaceName);
+    
   }, [selectedFoodSpace]);
 
 
@@ -112,6 +125,7 @@ export default function Add() {
         setFoodSpacePickerItems(prev => [...prev, { label: nfs.name, value: nfs.$id }]);
         setCreateFoodSpace(false);
         setSelectedFoodSpace(nfs.$id);
+        setNewFoodSpace("");
       }
 
       let item = await appwrite.createFoodItem(form.title, form.expiry, form.quantity, user.activeHouseholdId,
@@ -195,30 +209,37 @@ export default function Add() {
 
             <View className="z-10">
               <Text className="text-base font-pmedium ml-2">Food Space</Text>
-              {createFoodSpace ?
-                (
-                  <View>
-                  <FormField
-                    value={newFoodSpace}
-                    handleChangeText={(e) => setNewFoodSpace(e)}
-                  />
-                  <CustomButton title="Pick from list" handlePress={() => {setCreateFoodSpace(false)}} />
-                  </View>
-                )
-                :
-                (<View>
-                  <DropDownPicker
-                    open={pickerOpen}
-                    value={selectedFoodSpace}
-                    items={foodSpacePickerItems}
-                    setOpen={setPickerOpen}
-                    setValue={setSelectedFoodSpace}
-                    multiple={false}
-                  />
-                  <CustomButton containerStyles="mt-2" title="Create new Food Space" handlePress={() => {setCreateFoodSpace(true)}} />
-                </View>
-                )
-              }
+              {/* Text box to enter food space manually */}
+              <View className={`flex flex-row ${createFoodSpace ? 'block' : 'hidden'}`}>
+                <FormField
+                  value={newFoodSpace}
+                  handleChangeText={(e) => setNewFoodSpace(e)}
+                  otherStyles="w-full"
+                />
+                <TouchableOpacity
+                  onPress={() => {
+                    setSelectedFoodSpace(foodSpaces[0].$id);
+                    setCreateFoodSpace(false);
+                  }}
+                  activeOpacity={0.7}
+                  className="bg-white flex-row self-center space-x-2 px-2 h-12 rounded-xl justify-center items-center absolute right-2"
+                >
+                  <Icon name="close-circle-outline" color="black" size={30} />
+                </TouchableOpacity>
+              </View>
+
+              {/* DropDownPicker for Selecting Food Space */}
+              <View className={`${createFoodSpace ? 'hidden' : 'block'}`}>
+                <DropDownPicker
+                  style={{height: 64, borderWidth: 2, borderRadius: 16}}
+                  open={pickerOpen}
+                  value={selectedFoodSpace}
+                  items={foodSpacePickerItems}
+                  setOpen={setPickerOpen}
+                  setValue={setSelectedFoodSpace}
+                  multiple={false}
+                />
+              </View>
             </View>
 
             <View>

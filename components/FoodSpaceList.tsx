@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomModal from './CustomModal';
 import { useGlobalContext } from '@/context/GlobalProvider';
 import { IItem } from '@/interfaces/IItem';
+import Item from './Item';
 
 export interface FoodSpaceListProps {
     refetch: () => void
@@ -84,7 +85,7 @@ export default function FoodSpaceList(props: FoodSpaceListProps) {
                             enableTrackpadTwoFingerGesture
                             rightThreshold={40}
                             renderRightActions={rightAction(item.$id)}>
-                            <FoodSpace name={item.name} />
+                            <Item name={item.name} />
                         </ReanimatedSwipeable>
                     </GestureHandlerRootView>
                 )}
