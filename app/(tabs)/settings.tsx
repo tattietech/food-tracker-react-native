@@ -3,8 +3,8 @@ import MenuItem from '@/components/MenuItem';
 import { useGlobalContext } from '@/context/GlobalProvider';
 import { appwrite } from '@/lib/appwrite';
 import { FlatList, SafeAreaView, ScrollView, Text, TouchableOpacity, View } from 'react-native';
-import { router } from 'expo-router'
-import { useEffect, useState } from 'react';
+import { router, useFocusEffect, useRouter } from 'expo-router'
+import { useCallback, useEffect, useState } from 'react';
 import { Icon } from '@/components/Icon';
 import PageHeader from '@/components/PageHeader';
 import { useSwipe } from '@/lib/useSwipe';
@@ -25,17 +25,25 @@ export default function Settings() {
     setIsLoggedIn(false);
     router.replace('/sign-in');
   }
+  
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        setManageFoodSpaces(false); // Reset state when navigating away
+      };
+    }, [])
+  );
 
-  // const { onTouchStart, onTouchEnd } = useSwipe(onSwipeLeft, onSwipeRight, 6)
+  const { onTouchStart, onTouchEnd } = useSwipe(onSwipeLeft, onSwipeRight, 6)
 
-  // function onSwipeLeft() {
-  // }
+  function onSwipeLeft() {
+  }
 
-  // function onSwipeRight() {
-  //   if (manageFoodSpaces) {
-  //     setManageFoodSpaces(false);
-  //   }
-  // }
+  function onSwipeRight() {
+    if (manageFoodSpaces) {
+      setManageFoodSpaces(false);
+    }
+  }
 
   const getAllFoodSpacesForHousehold = async (): Promise<IFoodSpace[]> => {
     return await appwrite.getAllFoodSpacesForHousehold(user.activeHouseholdId); // Replace with actual household ID
@@ -59,7 +67,7 @@ export default function Settings() {
 
 
   return (
-    <SafeAreaView className="h-full bg-white">
+    <SafeAreaView onTouchStart={onTouchStart} onTouchEnd={onTouchEnd} className="h-full bg-white">
       {
         manageFoodSpaces ?
           (

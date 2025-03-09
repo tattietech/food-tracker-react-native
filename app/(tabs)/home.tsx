@@ -1,4 +1,4 @@
-import { Alert, FlatList, SafeAreaView, SectionList, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, FlatList, Pressable, SafeAreaView, SectionList, Text, TouchableOpacity, View } from 'react-native';
 import { useGlobalContext } from '../../context/GlobalProvider'
 import useAppwrite from '@/lib/useAppwrite';
 import { appwrite } from '@/lib/appwrite';
@@ -14,6 +14,7 @@ import Reanimated, {
 } from 'react-native-reanimated';
 import { Section } from '@/interfaces/ISection';
 import PageHeader from '@/components/PageHeader';
+import { Icon } from '@/components/Icon';
 
 export default function Home() {
   const { globalItems, setGlobalItems, user } = useGlobalContext();
@@ -38,6 +39,29 @@ export default function Home() {
     setGroupedItems(mapItemsToSections());
   }, [globalItems]);
 
+  const [expandedSections, setExpandedSections] = useState(new Set());
+
+  const handleToggle = (title : string) => {
+    setExpandedSections((expandedSections) => {
+      // Using Set here but you can use an array too
+      const next = new Set(expandedSections);
+      if (next.has(title)) {
+        next.delete(title);
+      } else {
+        next.add(title);
+      }
+      return next;
+    });
+  };
+
+  const sectionExpanded = (title : string) => {
+      if (expandedSections.has(title)) {
+        return true;
+      }
+
+      return false;
+  };
+
   const mapItemsToSections = (): Section[] => {
     const groupedItems: Record<string, IItem[]> = {};
 
@@ -54,6 +78,7 @@ export default function Home() {
         groupedItems[item.foodSpaceName] = [];
       }
       groupedItems[item.foodSpaceName].push(item);
+      expandedSections.add(item.foodSpaceName);
     });
 
     // Convert grouped object into SectionList format
@@ -70,6 +95,7 @@ export default function Home() {
   }
 
   useEffect(() => {
+    console.log(expandedSections);
     onRefresh();
   }, []);
 
@@ -100,12 +126,15 @@ export default function Home() {
     <SafeAreaView className="h-full bg-white">
       <PageHeader title="Home" />
 
-      <SectionList
-        className="mt-0"
-        sections={groupedItems}
-        keyExtractor={(item) => item.$id}
-        renderItem={({ item }) => (
-          <GestureHandlerRootView>
+<SectionList
+      sections={groupedItems}
+      extraData={expandedSections}
+      keyExtractor={(item, index) => `${item}-${index}`}
+      renderItem={({ section: { title }, item }) => {
+        const isExpanded = expandedSections.has(title);
+        if (!isExpanded) return null;
+
+        return <GestureHandlerRootView>
             <ReanimatedSwipeable
               friction={2}
               enableTrackpadTwoFingerGesture
@@ -114,15 +143,20 @@ export default function Home() {
               <Item name={item.name} quantity={item.quantity} expiry={item.expiry} />
             </ReanimatedSwipeable>
           </GestureHandlerRootView>
-        )}
-        renderSectionHeader={({ section: { title } }) => (
-          <View className="bg-gray-200 p-2">
+      }}
+      renderSectionHeader={({ section: { title } }) => (
+        <Pressable onPress={() => handleToggle(title)}>
+          <View className="flex flex-row bg-gray-200 p-2 justify-between items-center">
             <Text className="text-lg font-bold">{title}</Text>
+
+            {
+              sectionExpanded(title) ? (<Icon name="chevron-down-sharp" size={20}></Icon>)
+              : (<Icon name="chevron-forward-sharp" size={20}></Icon>)
+            }
           </View>
-        )}
-        ListEmptyComponent={() => <Text>Nae items yet pal</Text>}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-      />
+          </Pressable>
+      )}
+    />
     </SafeAreaView>
   );
 }
