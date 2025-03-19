@@ -22,7 +22,7 @@ const CustomModal = (props : CustomModalProps) => {
                         <Text className="mb-4 text-center">{props.body}</Text>
                         <View className="flex flex-row">
                             <Pressable
-                                className="bg-blue-500 rounded-lg p-3 mr-1"
+                                className="bg-blue rounded-lg p-3 mr-1"
                                 onPress={() => {props.cancel()}}>
                                 <Text className="text-white font-bold text-center">Cancel</Text>
                             </Pressable>

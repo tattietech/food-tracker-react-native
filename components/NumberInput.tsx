@@ -1,44 +1,44 @@
 import { Text, TouchableOpacity, View } from "react-native";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface NumberInputProps {
     setForm: any,
-    form: any
-  }
+    form: any,
+    quantity: number,
+    setQuantity: (num: number) => void
+}
 
-export default function NumberInput( props : NumberInputProps) {
-    const [num, setNum] = useState(1)
-
+export default function NumberInput(props: NumberInputProps) {
     return (
         <View className="flex flex-row space-x-3 h-10 items-center mt-1 border-2 rounded-xl h-16">
-            <Text className="text-base ml-2">{num}</Text>
+            <Text className="text-base ml-2">{props.quantity}</Text>
             <View className="absolute right-1 flex flex-row space-x-1">
-            <TouchableOpacity
-                onPress={() => {
-                    if (num > 1) {
-                        setNum(num - 1)
-                        props.setForm({ ...props.form, quantity: num });
-                    }
-                }}
-                activeOpacity={0.7}
-                className="bg-primary rounded-xl w-12 h-12 justify-center items-center"
-            >
-                <Text className="text-white font-psemibold text-2xl ${props.textStyles">
-                    -
-                </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-                onPress={() => {
-                    setNum(num+1);
-                    props.setForm({ ...props.form, quantity: num });
-                }}
-                activeOpacity={0.7}
-                className="bg-primary rounded-xl w-12 h-12 justify-center items-center"
-            >
-                <Text className="text-white font-psemibold text-2xl ${props.textStyles">
-                    +
-                </Text>
-            </TouchableOpacity>
+                <TouchableOpacity
+                    onPress={() => {
+                        if (props.quantity > 1) {
+                            props.setForm({ ...props.form, quantity: props.quantity-1 });
+                            props.setQuantity(props.quantity - 1)
+                        }
+                    }}
+                    activeOpacity={0.7}
+                    className="bg-primary rounded-xl w-12 h-12 justify-center items-center"
+                >
+                    <Text className="text-white font-psemibold text-2xl ${props.textStyles">
+                        -
+                    </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    onPress={() => {
+                        props.setForm({ ...props.form, quantity: props.quantity+1 });
+                        props.setQuantity(props.quantity + 1);
+                    }}
+                    activeOpacity={0.7}
+                    className="bg-primary rounded-xl w-12 h-12 justify-center items-center"
+                >
+                    <Text className="text-white font-psemibold text-2xl ${props.textStyles">
+                        +
+                    </Text>
+                </TouchableOpacity>
             </View>
         </View>
     )

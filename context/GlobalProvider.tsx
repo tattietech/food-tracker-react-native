@@ -3,6 +3,7 @@ import { appwrite } from "../lib/appwrite";
 import { IItem } from "../interfaces/IItem";
 import { IUser } from "@/interfaces/IUser";
 import { IFoodSpace } from "@/interfaces/IFoodSpace";
+import useAppwrite from "@/lib/useAppwrite";
 
 // default null context
 export const def : any = null;
@@ -38,6 +39,7 @@ useEffect(() => {
         setIsLoading(false);
     })
 }, []);
+
 
     return (
         <GlobalContext.Provider

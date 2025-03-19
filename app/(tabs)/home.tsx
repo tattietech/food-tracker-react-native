@@ -2,7 +2,7 @@ import { Alert, FlatList, Pressable, SafeAreaView, SectionList, Text, TouchableO
 import { useGlobalContext } from '../../context/GlobalProvider'
 import useAppwrite from '@/lib/useAppwrite';
 import { appwrite } from '@/lib/appwrite';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Item from '@/components/Item';
 import { IItem } from '@/interfaces/IItem';
 import { RefreshControl } from 'react-native';
@@ -15,10 +15,30 @@ import Reanimated, {
 import { Section } from '@/interfaces/ISection';
 import PageHeader from '@/components/PageHeader';
 import { Icon } from '@/components/Icon';
+import {
+  useNavigation,
+} from '@react-navigation/native';
+import UpdateItemModal from '@/components/UpdateItemModal';
+import { IItemForm } from '@/interfaces/IItemForm';
+import Toast from 'react-native-toast-message';
+import { showSuccessToast } from '@/lib/toast';
 
 export default function Home() {
   const { globalItems, setGlobalItems, user } = useGlobalContext();
   const [groupedItems, setGroupedItems] = useState<Section[]>([]);
+  const swipeableRefs = useRef(new Map<string, any>());
+  const [updateItem, setUpdateItem] = useState(false);
+  const [updatingItemId, setUpdatingItemId] = useState("");
+
+  // form for updating item
+  const [form, setForm] = useState<IItemForm>({
+          title: "",
+          expiry: new Date(),
+          quantity: "1",
+          foodSpaceId: "",
+          foodSpaceName: ""
+      }
+      )
 
   const getAllItems = async (): Promise<IItem[]> => {
     return await appwrite.getAllItems(user.activeHouseholdId);
@@ -74,11 +94,11 @@ export default function Home() {
 
     // Group items by `foodSpaceName`
     (globalItems as IItem[]).forEach((item) => {
-      if (!groupedItems[item.foodSpaceName]) {
-        groupedItems[item.foodSpaceName] = [];
+      if (!groupedItems[item.foodSpace.name]) {
+        groupedItems[item.foodSpace.name] = [];
       }
-      groupedItems[item.foodSpaceName].push(item);
-      expandedSections.add(item.foodSpaceName);
+      groupedItems[item.foodSpace.name].push(item);
+      expandedSections.add(item.foodSpace.name);
     });
 
     // Convert grouped object into SectionList format
@@ -95,7 +115,6 @@ export default function Home() {
   }
 
   useEffect(() => {
-    console.log(expandedSections);
     onRefresh();
   }, []);
 
@@ -105,28 +124,56 @@ export default function Home() {
     }
   }, [data]);
 
+  const swipeableRef = useRef<any>(null);
 
-  const rightAction = (itemId: string) =>
+const closeAllSwipeables = () => {
+  swipeableRefs.current.forEach(ref => ref?.close());
+};
+
+const closeUpdateItem = () => {
+  setUpdateItem(false);
+}
+
+
+  const rightAction = (itemId: string, title: string, expiry: Date, quantity: string, foodSpaceId: string, foodSpaceName: string) =>
     (prog: SharedValue<number>, drag: SharedValue<number>) => {
       const styleAnimation = useAnimatedStyle(() => {
         return {
-          transform: [{ translateX: drag.value + 70 }],
+          transform: [{ translateX: drag.value + 0 }],
         };
       });
 
       return (
-        <TouchableOpacity onPress={() => deleteItem(itemId)}>
-          <Reanimated.View className="bg-red h-24 px-4 items-center flex-row">
-            <Text className="text-white">Delete</Text>
+        <View className="flex flex-row w-[35%]">
+          <TouchableOpacity onPress={() => {closeAllSwipeables(); setUpdatingItemId(itemId); setForm({
+            title,
+            expiry,
+            quantity,
+            foodSpaceId,
+            foodSpaceName
+          }), setUpdateItem(true) }} className="w-1/2">
+          <Reanimated.View className="bg-blue h-24 px-4 items-center justify-center">
+            <Text className="text-white">Edit</Text>
+            <Icon name="pencil-outline" color={'white'} size={25}></Icon>
           </Reanimated.View>
         </TouchableOpacity>
+        <TouchableOpacity onPress={() => {closeAllSwipeables(); deleteItem(itemId)}} className="w-1/2">
+          <Reanimated.View className="bg-red h-24 px-4 items-center justify-center">
+            <Text className="text-white">Delete</Text>
+            <Icon name="trash-outline" color={'white'} size={25}></Icon>
+          </Reanimated.View>
+        </TouchableOpacity>
+      </View>
       );
     }
   return (
     <SafeAreaView className="h-full bg-white">
       <PageHeader title="Home" />
 
+      <UpdateItemModal id={updatingItemId} form={form} setForm={setForm} visible={updateItem} cancel={closeUpdateItem}/> 
+
 <SectionList
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       sections={groupedItems}
       extraData={expandedSections}
       keyExtractor={(item, index) => `${item}-${index}`}
@@ -136,10 +183,11 @@ export default function Home() {
 
         return <GestureHandlerRootView>
             <ReanimatedSwipeable
+              ref={(ref) => ref && swipeableRefs.current.set(item.$id, ref)}
               friction={2}
               enableTrackpadTwoFingerGesture
               rightThreshold={40}
-              renderRightActions={rightAction(item.$id)}>
+              renderRightActions={rightAction(item.$id, item.name, item.expiry, item.quantity.toString(), item.foodSpace.$id, item.foodSpace.$id)}>
               <Item name={item.name} quantity={item.quantity} expiry={item.expiry} />
             </ReanimatedSwipeable>
           </GestureHandlerRootView>

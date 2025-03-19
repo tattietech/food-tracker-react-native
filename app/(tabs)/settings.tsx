@@ -13,11 +13,17 @@ import CustomButton from '@/components/CustomButton';
 import CustomFormModal from '@/components/CustomFormModal';
 import useAppwrite from '@/lib/useAppwrite';
 import { IFoodSpace } from '@/interfaces/IFoodSpace';
+import { showSuccessToast } from '@/lib/toast';
 
 export default function Settings() {
-  const { setUser, setIsLoggedIn, user, globalFoodSpaces, setGlobalFoodSpaces } = useGlobalContext();
+  const { setUser, setIsLoggedIn, user, setGlobalFoodSpaces, setGlobalItems } = useGlobalContext();
   const [manageFoodSpaces, setManageFoodSpaces] = useState(false);
   const [createSpaceModalVisible, setCreateSpaceModalVisible] = useState(false);
+  const [updateSpaceValue, setUpdateSpaceValue] = useState("");
+  const [updateSpaceId, setUpdateSpaceId] = useState("");
+  const [spaceModalTitle, setSpaceModalTitle] = useState("");
+  const [spaceModalButton, setSpaceModalButton] = useState("");
+  const [updatingSpace, setUpdatingSpace] = useState(false);
 
   const logOut = async () => {
     await appwrite.signOut();
@@ -55,14 +61,49 @@ export default function Settings() {
     await getAllFoodSpacesForHousehold();
     foodSpaceListRefetch();
     setCreateSpaceModalVisible(false);
+    setSpaceModalTitle(`Create Food Space`);
+    setSpaceModalButton("Create");
+    setUpdatingSpace(false);
   };
 
-  const createFoodSpace = async (name: string, householdId: string) => {
-    const newSpace = await appwrite.createFoodSpace(name, householdId);
-    setGlobalFoodSpaces((prevItems: IFoodSpace[] | null) => {
-      // If prevItems is null, initialize it as an empty array, then add the new item
-      return prevItems ? [...prevItems, newSpace] : [newSpace];
-    });
+  const createUpdateFoodSpace = async (name: string, householdId: string) => {
+    if (updatingSpace && updateSpaceId) {
+      const newSpace = await appwrite.updateFoodSpace(updateSpaceId, name, householdId);
+      let items = await appwrite.getAllItems(householdId);
+
+      setTimeout(() => {
+        setGlobalItems(items);
+      }, 0);
+
+      setGlobalFoodSpaces((prevItems: IFoodSpace[] | null) => {
+        if (prevItems) {
+          prevItems = prevItems.filter(i => i.$id != updateSpaceId);
+        }
+        // If prevItems is null, initialize it as an empty array, then add the new item
+  
+        showSuccessToast("Success", `${name} updated`);
+
+        return prevItems ? [...prevItems, newSpace] : [newSpace];
+      });
+    }
+    else {
+      const newSpace = await appwrite.createFoodSpace(name, householdId);
+      setGlobalFoodSpaces((prevItems: IFoodSpace[] | null) => {
+        // If prevItems is null, initialize it as an empty array, then add the new item
+  
+        showSuccessToast("Success", `${name} created`);
+        return prevItems ? [...prevItems, newSpace] : [newSpace];
+      });
+    }
+  }
+
+  const updateFoodSpace = (id: string, name: string) => {
+    setUpdatingSpace(true);
+    setUpdateSpaceId(id);
+    setSpaceModalTitle(`Update ${name}`);
+    setSpaceModalButton("Update");
+    setUpdateSpaceValue(name);
+    setCreateSpaceModalVisible(true);
   }
 
 
@@ -77,13 +118,16 @@ export default function Settings() {
             // </SafeAreaView>
             <>
               <PageHeader title="Food Spaces" backButton={() => { setManageFoodSpaces(false) }} />
-              <FoodSpaceList refetch={foodSpaceListRefetch} data={foodSpaceListData ?? []} />
+              <FoodSpaceList refetch={foodSpaceListRefetch} edit={updateFoodSpace} data={foodSpaceListData ?? []} />
               <CustomFormModal
                 formProps={user.activeHouseholdId}
-                action={createFoodSpace}
-                title="Create Food Space"
+                action={createUpdateFoodSpace}
+                title={spaceModalTitle ?? "Create Food Space"}
                 cancel={closeFoodSpaceModal}
-                visible={createSpaceModalVisible} actionButtonText="Create"
+                visible={createSpaceModalVisible}
+                actionButtonText={spaceModalButton ?? "Create"}
+                formValue={updateSpaceValue}
+                setFormValue={setUpdateSpaceValue}
               />
               <CustomButton
                 title="Create Food Space"

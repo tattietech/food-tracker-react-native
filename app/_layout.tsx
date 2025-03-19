@@ -2,8 +2,9 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import 'react-native-reanimated';
+import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 import GlobalProvider from '@/context/GlobalProvider';
@@ -27,6 +28,43 @@ export default function RootLayout() {
     return null;
   }
 
+  const toastConfig = {
+    /*
+      Overwrite 'success' type,
+      by modifying the existing `BaseToast` component
+    */
+    success: (props:any) => (
+      <BaseToast
+        {...props}
+        style={{ borderLeftColor: '#32c237' }}
+        contentContainerStyle={{ paddingHorizontal: 15 }}
+        text1Style={{
+          fontSize: 15,
+          fontWeight: '500',
+        }}
+        text2Style={{
+          fontSize: 12
+        }}
+      />
+    ),
+    /*
+      Overwrite 'error' type,
+      by modifying the existing `ErrorToast` component
+    */
+    error: (props:any) => (
+      <ErrorToast
+        {...props}
+        text1Style={{
+          fontSize: 15,
+          fontWeight: '500'
+        }}
+        text2Style={{
+          fontSize: 12
+        }}
+      />
+    )
+  };
+
   return (
     <GlobalProvider>
       <Stack>
@@ -36,6 +74,7 @@ export default function RootLayout() {
         <Stack.Screen name="(settings)/manageFoodSpaces" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" />
       </Stack>
+      <Toast config={toastConfig} />
       </GlobalProvider>
   );
 }

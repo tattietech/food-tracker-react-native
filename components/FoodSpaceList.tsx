@@ -1,5 +1,5 @@
-import { Text, FlatList, TouchableOpacity, RefreshControl, Modal, Pressable } from 'react-native'
-import React, { useState } from 'react'
+import { Text, FlatList, TouchableOpacity, RefreshControl, Modal, Pressable, View } from 'react-native'
+import React, { useRef, useState } from 'react'
 import { appwrite } from '@/lib/appwrite';
 import { IFoodSpace } from '@/interfaces/IFoodSpace';
 import FoodSpace from './FoodSpace';
@@ -14,17 +14,22 @@ import CustomModal from './CustomModal';
 import { useGlobalContext } from '@/context/GlobalProvider';
 import { IItem } from '@/interfaces/IItem';
 import Item from './Item';
+import { showSuccessToast } from '@/lib/toast';
+import { Icon } from './Icon';
 
 export interface FoodSpaceListProps {
     refetch: () => void
     data: IFoodSpace[]
+    edit: (id: string, title: string) => void
 }
 
 export default function FoodSpaceList(props: FoodSpaceListProps) {
     const [refreshing, setRefreshing] = useState(false);
     const [spaceToDelete, setSpaceToDelete] = useState("");
+    const [spaceToDeleteName, setSpaceToDeleteName] = useState("");
     const [itemWarningVisible, setItemWarningVisible] = useState(false);
     const { globalItems, setGlobalItems, globalFoodSpaces, setGlobalFoodSpaces } = useGlobalContext();
+    const swipeableRefs = useRef(new Map<string, any>());
 
     const onRefresh = async () => {
         setRefreshing(true);
@@ -32,30 +37,37 @@ export default function FoodSpaceList(props: FoodSpaceListProps) {
         setRefreshing(false);
     }
 
-    const deleteSpace = async (spaceId: string): Promise<void> => {
+    const deleteSpace = async (spaceId: string, name: string): Promise<void> => {
         await appwrite.deleteFoodSpace(spaceId);
         await setGlobalItems((globalItems as IItem[]).filter(i => i.foodSpaceId != spaceId));
         await setGlobalFoodSpaces((globalFoodSpaces as IFoodSpace[]).filter(fs => fs.$id != spaceId))
-        
+
         if (itemWarningVisible) {
             setItemWarningVisible(false);
         }
         props.refetch();
+        showSuccessToast("Success", `${name} deleted`);
     }
 
-    const checkSpaceForItems = async (spaceId: string): Promise<void> => {
+    const checkSpaceForItems = async (spaceId: string, name: string): Promise<void> => {
         let foodSpaceContainsItems = await appwrite.foodSpaceContainsItems(spaceId);
 
         if (foodSpaceContainsItems) {
             setSpaceToDelete(spaceId);
+            setSpaceToDeleteName(name);
             setItemWarningVisible(true);
         }
         else {
-            deleteSpace(spaceId);
+            deleteSpace(spaceId, name);
         }
     }
 
-    const rightAction = (itemId: string) =>
+    const closeAllSwipeables = () => {
+        swipeableRefs.current.forEach(ref => ref?.close());
+    };
+
+
+    const rightAction = (itemId: string, name: string) =>
         (prog: SharedValue<number>, drag: SharedValue<number>) => {
             const styleAnimation = useAnimatedStyle(() => {
                 return {
@@ -64,27 +76,47 @@ export default function FoodSpaceList(props: FoodSpaceListProps) {
             });
 
             return (
-                <TouchableOpacity onPress={() => { checkSpaceForItems(itemId) }}>
-                    <Reanimated.View className="bg-red h-24 px-4 items-center flex-row">
-                        <Text className="text-white">Delete</Text>
-                    </Reanimated.View>
-                </TouchableOpacity>
+                // <TouchableOpacity onPress={() => { checkSpaceForItems(itemId, name) }}>
+                //     <Reanimated.View className="bg-red h-24 px-4 items-center flex-row">
+                //         <Text className="text-white">Delete</Text>
+                //     </Reanimated.View>
+                // </TouchableOpacity>
+                <View className="flex flex-row w-[35%]">
+                    <TouchableOpacity onPress={() => { closeAllSwipeables(); props.edit(itemId, name) }} className="w-1/2">
+                        <Reanimated.View className="bg-blue h-24 px-4 items-center justify-center">
+                            <Text className="text-white">Edit</Text>
+                            <Icon name="pencil-outline" color={'white'} size={25}></Icon>
+                        </Reanimated.View>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => { closeAllSwipeables(); checkSpaceForItems(itemId, name) }} className="w-1/2">
+                        <Reanimated.View className="bg-red h-24 px-4 items-center justify-center">
+                            <Text className="text-white">Delete</Text>
+                            <Icon name="trash-outline" color={'white'} size={25}></Icon>
+                        </Reanimated.View>
+                    </TouchableOpacity>
+                </View>
             );
         }
 
     return (
         <SafeAreaView edges={['bottom', 'left', 'right']} style={{ flex: 1 }}>
-            <CustomModal title="Warning" body="Deleting this space will also remove all the items it contains." visible={itemWarningVisible} action={() => {deleteSpace(spaceToDelete)}} cancel={() => {setItemWarningVisible(false)}} />
+            <CustomModal
+                title="Warning"
+                body="Deleting this space will also remove all the items it contains."
+                visible={itemWarningVisible}
+                action={() => { deleteSpace(spaceToDelete, spaceToDeleteName) }}
+                cancel={() => { setItemWarningVisible(false) }} />
             <FlatList
                 data={props.data}
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
                 renderItem={({ item }) => (
                     <GestureHandlerRootView>
                         <ReanimatedSwipeable
+                            ref={(ref) => ref && swipeableRefs.current.set(item.$id, ref)}
                             friction={2}
                             enableTrackpadTwoFingerGesture
                             rightThreshold={40}
-                            renderRightActions={rightAction(item.$id)}>
+                            renderRightActions={rightAction(item.$id, item.name)}>
                             <Item name={item.name} />
                         </ReanimatedSwipeable>
                     </GestureHandlerRootView>
