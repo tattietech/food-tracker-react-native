@@ -39,7 +39,7 @@ export default function FoodSpaceList(props: FoodSpaceListProps) {
 
     const deleteSpace = async (spaceId: string, name: string): Promise<void> => {
         await appwrite.deleteFoodSpace(spaceId);
-        await setGlobalItems((globalItems as IItem[]).filter(i => i.foodSpaceId != spaceId));
+        await setGlobalItems((globalItems as IItem[]).filter(i => i.foodSpace.$id != spaceId));
         await setGlobalFoodSpaces((globalFoodSpaces as IFoodSpace[]).filter(fs => fs.$id != spaceId))
 
         if (itemWarningVisible) {

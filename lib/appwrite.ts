@@ -227,7 +227,7 @@ export const appwrite = {
             const posts = await databases.listDocuments<IItem>(
                 config.databaseId,
                 config.itemCollectionId,
-                [Query.equal('foodSpaceId', foodSpaceId), Query.orderAsc('expiry')]
+                [Query.equal('foodSpace', foodSpaceId), Query.orderAsc('expiry')]
             )
 
             return posts.documents;
@@ -242,7 +242,7 @@ export const appwrite = {
                 config.databaseId,
                 config.itemCollectionId,
                 [
-                    Query.equal('foodSpaceId', foodSpaceId), Query.orderAsc('expiry'),
+                    Query.equal('foodSpace', foodSpaceId), Query.orderAsc('expiry'),
                     Query.limit(1)
                 ]
             )

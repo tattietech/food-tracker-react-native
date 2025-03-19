@@ -27,6 +27,7 @@ export interface ItemFormProps {
 export default function ItemForm(props: ItemFormProps) {
     const { user, setGlobalItems, globalFoodSpaces, setGlobalFoodSpaces } = useGlobalContext();
     const [scanning, setScanning] = useState(false);
+    const [scanningCode, setScanningCode] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [enterManually, setEnterManually] = useState(false);
     const [createFoodSpace, setCreateFoodSpace] = useState(false);
@@ -38,6 +39,7 @@ export default function ItemForm(props: ItemFormProps) {
     const CREATE_FOOD_SPACE = "newFoodSpace";
     const newFoodSpaceTextBoxRef = useRef<TextInput>(null);
     const [quantity, setQuantity] = useState(1);
+    const [scanningMode, setScanningMode] = useState("code");
 
     const submit = async () => {
         console.log(props.form);
@@ -146,17 +148,27 @@ export default function ItemForm(props: ItemFormProps) {
     return (
         <TouchableWithoutFeedback onPress={() => { Keyboard.dismiss(); setEnterManually(false); setPickerOpen(false) }} accessible={false}>
             <SafeAreaView className="h-full bg-white">
-                {scanning && <Scanner setScanning={setScanning} setForm={props.setForm} form={props.form} />}
-                {!scanning && <View className="h-full">
+                {scanning && <Scanner setMode={setScanningMode} mode={scanningMode} setScanning={setScanning} setForm={props.setForm} form={props.form} />}
+                {/* {scanningCode && <BarCodeScanner setScanningCode={setScanningCode} setScanningDate={setScanning} setForm={props.setForm} form={props.form} />} */}
+                {(!scanning && !scanningCode) && <View className="h-full">
                     <PageHeader title={props.title} />
                     <View className="mt-6 flex flex-col space-y-8 px-3">
-                        <View>
+                        <View className="flex flex-row">
                             <FormField
                                 title="Title"
                                 value={props.form.title}
                                 placeholder="The items name"
                                 handleChangeText={(e) => props.setForm({ ...props.form, title: e })}
+                                otherStyles='w-full'
                             />
+                            <TouchableOpacity
+                                    onPress={() => { setScanningMode("code"); setScanning(true) }}
+                                    activeOpacity={0.7}
+                                    className="bg-primary flex-row space-x-2 px-2 h-12 w-28 rounded-xl justify-center items-center absolute right-1 mt-10"
+                                >
+                                    <Icon name="barcode" color="white" size={30} />
+                                    <Text className="text-white">Scan</Text>
+                                </TouchableOpacity>
                         </View>
 
                         <View>
@@ -168,7 +180,7 @@ export default function ItemForm(props: ItemFormProps) {
                                 </TouchableOpacity>
 
                                 <TouchableOpacity
-                                    onPress={() => { setScanning(true) }}
+                                    onPress={() => { setScanningMode("date"); setScanning(true) }}
                                     activeOpacity={0.7}
                                     className="bg-primary flex-row space-x-2 px-2 h-12 w-28 rounded-xl justify-center items-center absolute right-1"
                                 >
