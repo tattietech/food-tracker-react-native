@@ -72,14 +72,10 @@ export default function ItemForm(props: ItemFormProps) {
         setQuantity(1);
     }
 
-    const getFoodSpaces = async (): Promise<IFoodSpace[]> => {
-        return await appwrite.getAllFoodSpacesForHousehold(user.activeHouseholdId);
-    };
-
     useEffect(() => {
         const fetchFoodSpaces = async () => {
             try {
-                const data = await getFoodSpaces();
+                const data = await appwrite.getAllFoodSpacesForHousehold(user.activeHouseholdId);
                 setFoodSpaces(data);
                 setGlobalFoodSpaces(data);
                 setSelectedFoodSpace(props.form.foodSpaceId);

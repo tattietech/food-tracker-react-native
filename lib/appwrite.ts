@@ -4,7 +4,9 @@ import { IFoodSpace } from '@/interfaces/IFoodSpace';
 import { IHousehold } from '@/interfaces/IHousehold';
 import { IItem } from '@/interfaces/IItem';
 import { IUser } from '@/interfaces/IUser';
+import { Alert } from 'react-native';
 import { Account, Avatars, Client, Databases, ID, Query } from 'react-native-appwrite'
+import PushNotificationIOS from '@react-native-community/push-notification-ios';
 
 export const config = {
     endpoint: "https://cloud.appwrite.io/v1",
@@ -14,7 +16,8 @@ export const config = {
     userCollectionId: '67b335ef0005007ac675',
     itemCollectionId: '67da8b4a00128755557d',
     foodSpaceCollectionId: '67b31600002018a89402',
-    householdCollectionId: '67b336b9002d6f610161'
+    householdCollectionId: '67b336b9002d6f610161',
+    applePushNotificationProviderId: '67daecc2003189b72b14'
 }
 
 // Init your React Native SDK
@@ -32,9 +35,51 @@ const databases = new Databases(client);
 
 export const appwrite = {
 
+    registerDeviceToken: async (token: string) => {
+        try {
+            await account.createPushTarget(ID.unique(), token);
+            console.log('Device registered with Appwrite');
+        } catch (error) {
+            console.log('Error registering device:', error);
+        }
+    },
+
+    setupNotifications: async () => {
+        // Request APNS permissions
+        PushNotificationIOS.requestPermissions().then((permissions) => {
+            if (permissions?.alert || permissions?.badge || permissions?.sound) {
+                console.log('APNS Permissions granted:', permissions);
+            } else {
+                Alert.alert('Push Notification Permission', 'You need to enable notifications in settings.');
+            }
+        });
+
+        // Listen for the APNS token
+        const onRegister = (token: string) => {
+            console.log('APNS Token:', token);
+            appwrite.registerDeviceToken(token);
+        };
+
+        // Handle incoming notifications
+        const onNotification = (notification: any) => {
+            Alert.alert(notification.getTitle(), notification.getMessage());
+        };
+
+        // Add event listeners
+        PushNotificationIOS.addEventListener('register', onRegister);
+        PushNotificationIOS.addEventListener('notification', onNotification);
+
+        return () => {
+            // Clean up event listeners
+            PushNotificationIOS.removeEventListener('register');
+            PushNotificationIOS.removeEventListener('notification');
+        };
+    },
+
     signIn: async (email: string, password: string) => {
         try {
             const session = await account.createEmailPasswordSession(email, password);
+            await appwrite.setupNotifications();
             return session;
         } catch (error) {
             console.log("attempted to sign in");
@@ -263,8 +308,10 @@ export const appwrite = {
             const foodSpaces = await databases.listDocuments<IFoodSpace>(
                 config.databaseId,
                 config.foodSpaceCollectionId,
-                [Query.equal('householdId', householdId)]
+                [Query.equal('householdId', householdId), Query.select([""])]
             )
+
+
 
             for (const foodSpace of foodSpaces.documents) {
                 foodSpace.items = await appwrite.getAllItemsForFoodSpace(foodSpace.$id);

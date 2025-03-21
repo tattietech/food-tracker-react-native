@@ -40,9 +40,10 @@ export default function Home() {
       }
       )
 
-  const getAllItems = async (): Promise<IItem[]> => {
-    return await appwrite.getAllItems(user.activeHouseholdId);
-  };
+  const refetch = async (): Promise<void> => {
+      const items = await appwrite.getAllItems(user.activeHouseholdId);
+      setGlobalItems(items);
+  }
 
   const deleteItem = async (itemId: string): Promise<void> => {
     await appwrite.deleteItem(itemId);
@@ -51,7 +52,7 @@ export default function Home() {
     refetch();
   }
 
-  const { data: data, refetch } = useAppwrite<IItem[]>(getAllItems);
+  //const { data: data, refetch } = useAppwrite<IItem[]>(getAllItems);
 
   const [refreshing, setRefreshing] = useState(false);
 
@@ -118,11 +119,11 @@ export default function Home() {
     onRefresh();
   }, []);
 
-  useEffect(() => {
-    if (data) {
-      setGlobalItems(data);
-    }
-  }, [data]);
+  // useEffect(() => {
+  //   if (data) {
+  //     setGlobalItems(data);
+  //   }
+  // }, [data]);
 
   const swipeableRef = useRef<any>(null);
 

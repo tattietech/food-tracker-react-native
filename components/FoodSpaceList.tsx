@@ -1,5 +1,5 @@
 import { Text, FlatList, TouchableOpacity, RefreshControl, Modal, Pressable, View } from 'react-native'
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { appwrite } from '@/lib/appwrite';
 import { IFoodSpace } from '@/interfaces/IFoodSpace';
 import FoodSpace from './FoodSpace';
@@ -18,8 +18,8 @@ import { showSuccessToast } from '@/lib/toast';
 import { Icon } from './Icon';
 
 export interface FoodSpaceListProps {
-    refetch: () => void
-    data: IFoodSpace[]
+    // refetch: () => void
+    // data: IFoodSpace[]
     edit: (id: string, title: string) => void
 }
 
@@ -28,12 +28,34 @@ export default function FoodSpaceList(props: FoodSpaceListProps) {
     const [spaceToDelete, setSpaceToDelete] = useState("");
     const [spaceToDeleteName, setSpaceToDeleteName] = useState("");
     const [itemWarningVisible, setItemWarningVisible] = useState(false);
-    const { globalItems, setGlobalItems, globalFoodSpaces, setGlobalFoodSpaces } = useGlobalContext();
+    const { globalItems, setGlobalItems, globalFoodSpaces, setGlobalFoodSpaces, user } = useGlobalContext();
     const swipeableRefs = useRef(new Map<string, any>());
+   // const [foodSpaces, setFoodSpaces] = useState<IFoodSpace[]>([]);
+
+
+    const getFoodSpaces = async (): Promise<IFoodSpace[]> => {
+            return await appwrite.getAllFoodSpacesForHousehold(user.activeHouseholdId);
+        };
+
+        const fetchFoodSpaces = async () => {
+            try {
+                setGlobalFoodSpaces(await getFoodSpaces());
+            } catch (error) {
+                console.error("Error fetching food spaces:", error);
+            }
+        };
+
+    useEffect(() => {
+            fetchFoodSpaces();
+        }, []);
+
+    // useEffect(() => {
+    //         setFoodSpaces(globalFoodSpaces);
+    //     }, [globalFoodSpaces]);
 
     const onRefresh = async () => {
         setRefreshing(true);
-        props.refetch();
+        fetchFoodSpaces();
         setRefreshing(false);
     }
 
@@ -45,7 +67,7 @@ export default function FoodSpaceList(props: FoodSpaceListProps) {
         if (itemWarningVisible) {
             setItemWarningVisible(false);
         }
-        props.refetch();
+        fetchFoodSpaces();
         showSuccessToast("Success", `${name} deleted`);
     }
 
@@ -107,7 +129,7 @@ export default function FoodSpaceList(props: FoodSpaceListProps) {
                 action={() => { deleteSpace(spaceToDelete, spaceToDeleteName) }}
                 cancel={() => { setItemWarningVisible(false) }} />
             <FlatList
-                data={props.data}
+                data={globalFoodSpaces}
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
                 renderItem={({ item }) => (
                     <GestureHandlerRootView>

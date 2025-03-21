@@ -8,6 +8,9 @@ import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 import GlobalProvider from '@/context/GlobalProvider';
+import PushNotificationIOS from '@react-native-community/push-notification-ios';
+import { Alert } from 'react-native';
+import { appwrite } from '@/lib/appwrite';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -18,15 +21,37 @@ export default function RootLayout() {
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
 
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
+  // useEffect(() => {
+  //   // Request APNS permissions
+  //   PushNotificationIOS.requestPermissions().then((permissions) => {
+  //     if (permissions?.alert || permissions?.badge || permissions?.sound) {
+  //       console.log('APNS Permissions granted:', permissions);
+  //     } else {
+  //       Alert.alert('Push Notification Permission', 'You need to enable notifications in settings.');
+  //     }
+  //   });
 
-  if (!loaded) {
-    return null;
-  }
+  //   // Listen for the APNS token
+  //   const onRegister = (token: string) => {
+  //     console.log('APNS Token:', token);
+  //     appwrite.registerDeviceToken(token);
+  //   };
+
+  //   // Handle incoming notifications
+  //   const onNotification = (notification: any) => {
+  //     Alert.alert(notification.getTitle(), notification.getMessage());
+  //   };
+
+  //   // Add event listeners
+  //   PushNotificationIOS.addEventListener('register', onRegister);
+  //   PushNotificationIOS.addEventListener('notification', onNotification);
+
+  //   return () => {
+  //     // Clean up event listeners
+  //     PushNotificationIOS.removeEventListener('register');
+  //     PushNotificationIOS.removeEventListener('notification');
+  //   };
+  // }, []);
 
   const toastConfig = {
     /*
@@ -64,6 +89,16 @@ export default function RootLayout() {
       />
     )
   };
+
+  useEffect(() => {
+    if (loaded) {
+      SplashScreen.hideAsync();
+    }
+  }, [loaded]);
+
+  if (!loaded) {
+    return null;
+  }
 
   return (
     <GlobalProvider>

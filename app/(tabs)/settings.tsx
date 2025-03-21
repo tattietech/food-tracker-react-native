@@ -51,15 +51,15 @@ export default function Settings() {
     }
   }
 
-  const getAllFoodSpacesForHousehold = async (): Promise<IFoodSpace[]> => {
-    return await appwrite.getAllFoodSpacesForHousehold(user.activeHouseholdId); // Replace with actual household ID
-  }
+  // const getAllFoodSpacesForHousehold = async (): Promise<IFoodSpace[]> => {
+  //   return await appwrite.getAllFoodSpacesForHousehold(user.activeHouseholdId); // Replace with actual household ID
+  // }
 
-  const { data: foodSpaceListData, refetch: foodSpaceListRefetch } = useAppwrite<IFoodSpace[]>(getAllFoodSpacesForHousehold);
+  //const { data: foodSpaceListData, refetch: foodSpaceListRefetch } = useAppwrite<IFoodSpace[]>(getAllFoodSpacesForHousehold);
 
   const closeFoodSpaceModal = async () => {
-    await getAllFoodSpacesForHousehold();
-    foodSpaceListRefetch();
+    //await getAllFoodSpacesForHousehold();
+    //foodSpaceListRefetch();
     setCreateSpaceModalVisible(false);
     setSpaceModalTitle(`Create Food Space`);
     setSpaceModalButton("Create");
@@ -118,7 +118,7 @@ export default function Settings() {
             // </SafeAreaView>
             <>
               <PageHeader title="Food Spaces" backButton={() => { setManageFoodSpaces(false) }} />
-              <FoodSpaceList refetch={foodSpaceListRefetch} edit={updateFoodSpace} data={foodSpaceListData ?? []} />
+              <FoodSpaceList edit={updateFoodSpace} />
               <CustomFormModal
                 formProps={user.activeHouseholdId}
                 action={createUpdateFoodSpace}
