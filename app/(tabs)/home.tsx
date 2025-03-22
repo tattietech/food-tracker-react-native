@@ -22,9 +22,10 @@ import UpdateItemModal from '@/components/UpdateItemModal';
 import { IItemForm } from '@/interfaces/IItemForm';
 import Toast from 'react-native-toast-message';
 import { showSuccessToast } from '@/lib/toast';
+import { IInvite } from '@/interfaces/IInvite';
 
 export default function Home() {
-  const { globalItems, setGlobalItems, user } = useGlobalContext();
+  const { globalItems, setGlobalItems, user, globalInvites } = useGlobalContext();
   const [groupedItems, setGroupedItems] = useState<Section[]>([]);
   const swipeableRefs = useRef(new Map<string, any>());
   const [updateItem, setUpdateItem] = useState(false);
@@ -116,6 +117,7 @@ export default function Home() {
   }
 
   useEffect(() => {
+    console.log(`home userid - ${user.$id}`);
     onRefresh();
   }, []);
 

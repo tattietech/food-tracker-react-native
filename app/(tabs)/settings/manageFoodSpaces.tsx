@@ -1,17 +1,14 @@
-import DividerLine from '@/components/DividerLine';
-import MenuItem from '@/components/MenuItem';
+
 import { useGlobalContext } from '@/context/GlobalProvider';
 import { appwrite } from '@/lib/appwrite';
-import { FlatList, SafeAreaView, ScrollView, Text, TouchableOpacity, View } from 'react-native';
-import { router, useFocusEffect, useRouter } from 'expo-router'
-import { useCallback, useEffect, useState } from 'react';
-import { Icon } from '@/components/Icon';
+import {  SafeAreaView } from 'react-native';
+import { router, useFocusEffect } from 'expo-router'
+import { useCallback, useState } from 'react';
 import PageHeader from '@/components/PageHeader';
 import { useSwipe } from '@/lib/useSwipe';
 import FoodSpaceList from '@/components/FoodSpaceList';
 import CustomButton from '@/components/CustomButton';
 import CustomFormModal from '@/components/CustomFormModal';
-import useAppwrite from '@/lib/useAppwrite';
 import { IFoodSpace } from '@/interfaces/IFoodSpace';
 import { showSuccessToast } from '@/lib/toast';
 
@@ -40,26 +37,7 @@ export default function Settings() {
     }, [])
   );
 
-  const { onTouchStart, onTouchEnd } = useSwipe(onSwipeLeft, onSwipeRight, 6)
-
-  function onSwipeLeft() {
-  }
-
-  function onSwipeRight() {
-    if (manageFoodSpaces) {
-      setManageFoodSpaces(false);
-    }
-  }
-
-  // const getAllFoodSpacesForHousehold = async (): Promise<IFoodSpace[]> => {
-  //   return await appwrite.getAllFoodSpacesForHousehold(user.activeHouseholdId); // Replace with actual household ID
-  // }
-
-  //const { data: foodSpaceListData, refetch: foodSpaceListRefetch } = useAppwrite<IFoodSpace[]>(getAllFoodSpacesForHousehold);
-
   const closeFoodSpaceModal = async () => {
-    //await getAllFoodSpacesForHousehold();
-    //foodSpaceListRefetch();
     setCreateSpaceModalVisible(false);
     setSpaceModalTitle(`Create Food Space`);
     setSpaceModalButton("Create");
@@ -108,16 +86,8 @@ export default function Settings() {
 
 
   return (
-    <SafeAreaView onTouchStart={onTouchStart} onTouchEnd={onTouchEnd} className="h-full bg-white">
-      {
-        manageFoodSpaces ?
-          (
-            // <SafeAreaView onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
-            //   <PageHeader title="Food Spaces" backButton={() => { setManageFoodSpaces(false) }} />
-            //   <FoodSpaceList />
-            // </SafeAreaView>
-            <>
-              <PageHeader title="Food Spaces" backButton={() => { setManageFoodSpaces(false) }} />
+    <SafeAreaView className="h-full bg-white">
+              <PageHeader title="Food Spaces" backButton={() => { router.back() }} />
               <FoodSpaceList edit={updateFoodSpace} />
               <CustomFormModal
                 formProps={user.activeHouseholdId}
@@ -134,31 +104,6 @@ export default function Settings() {
                 containerStyles='rounded-0'
                 handlePress={() => { setCreateSpaceModalVisible(true) }
                 } />
-            </>
-          )
-
-          :
-
-          (
-            <>
-              <PageHeader title="Settings" />
-              <FlatList
-                data={[
-                  {
-                    title: "Manage Food Spaces",
-                    action: () => { setManageFoodSpaces(true) }
-                  },
-                  {
-                    title: "Log Out",
-                    action: logOut
-                  }
-                ]}
-                renderItem={({ item }) => <MenuItem onPress={item.action} name={item.title} />}
-                className="mt-5"
-              />
-            </>
-          )
-      }
     </SafeAreaView>
   );
 }

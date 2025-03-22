@@ -17,11 +17,12 @@ export const config = {
     itemCollectionId: '67da8b4a00128755557d',
     foodSpaceCollectionId: '67b31600002018a89402',
     householdCollectionId: '67b336b9002d6f610161',
-    applePushNotificationProviderId: '67daecc2003189b72b14'
+    applePushNotificationProviderId: '67daecc2003189b72b14',
+    inviteCollectionId: '67dd8571002f44d2a250'
 }
 
 // Init your React Native SDK
-const client = new Client();
+export const client = new Client();
 
 client
     .setEndpoint(config.endpoint) // Your Appwrite Endpoint
@@ -62,6 +63,7 @@ export const appwrite = {
 
         // Handle incoming notifications
         const onNotification = (notification: any) => {
+            console.log("notification");
             Alert.alert(notification.getTitle(), notification.getMessage());
         };
 
@@ -69,17 +71,33 @@ export const appwrite = {
         PushNotificationIOS.addEventListener('register', onRegister);
         PushNotificationIOS.addEventListener('notification', onNotification);
 
-        return () => {
-            // Clean up event listeners
-            PushNotificationIOS.removeEventListener('register');
-            PushNotificationIOS.removeEventListener('notification');
-        };
+        // return () => {
+        //     // Clean up event listeners
+        //     PushNotificationIOS.removeEventListener('register');
+        //     PushNotificationIOS.removeEventListener('notification');
+        // };
     },
+
+    // subscribeToInvites: async (userId: string) => {
+    //     console.log("subscribing...");
+    //     // Subscribe to files channel
+    //     client.subscribe(`databases.${config.databaseId}.collections.${config.userCollectionId}.documents.${userId}`, response => {
+    //         // if (response.events.includes('buckets.*.files.*.create')) {
+    //         //     // Log when a new file is uploaded
+    //         //     console.log(response.payload);
+    //         // }
+
+    //         console.log(response.payload);
+
+    //         //console.log("invite update " + JSON.stringify(response));
+    //     });
+    // },
 
     signIn: async (email: string, password: string) => {
         try {
             const session = await account.createEmailPasswordSession(email, password);
             await appwrite.setupNotifications();
+
             return session;
         } catch (error) {
             console.log("attempted to sign in");

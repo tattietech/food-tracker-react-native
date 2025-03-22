@@ -42,8 +42,6 @@ export default function ItemForm(props: ItemFormProps) {
     const [scanningMode, setScanningMode] = useState("code");
 
     const submit = async () => {
-        console.log(props.form);
-
         let finalFoodSpaceId = props.form.foodSpaceId;
         let finalFoodSpaceName = props.form.foodSpaceName
 
