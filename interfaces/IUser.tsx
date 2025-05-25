@@ -6,4 +6,5 @@ export interface IUser extends IAppWriteDocument {
     activeHouseholdId: string
     pushTargetId: string
     invites: IInvite[]
+    email: string
 }

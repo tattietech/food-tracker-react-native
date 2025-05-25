@@ -10,6 +10,7 @@ import { useGlobalContext } from '@/context/GlobalProvider';
 import { IUser } from '@/interfaces/IUser';
 import { IInvite } from '@/interfaces/IInvite';
 import { Text, View } from 'react-native';
+import { IUserInvite } from '@/interfaces/IUserInvite';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -17,17 +18,40 @@ export default function TabLayout() {
   const [unreadInvites, setUnreadInvites] = useState<IInvite[]>([]);
 
   useEffect(() => {
-    client.subscribe(`databases.${config.databaseId}.collections.${config.userCollectionId}.documents.${user.$id}`, response => {
-      let user = response.payload as IUser
-      setGlobalInvites(user.invites);
+    const fetchInvites = async () => {
+      var invites = await appwrite.getUserInvite(user.$id);
 
-      setUnreadInvites((globalInvites as IInvite[]).filter(i => i.read == false));
-    });
-  }, []);
+      if (invites != null &&
+        invites != undefined &&
+        invites.length != 0 &&
+        invites[0].invites != null &&
+        invites[0].invites.length != 0) {
+          setGlobalInvites(invites[0].invites); 
+        }
+    }
+
+    fetchInvites();
+    setUnreadInvites((globalInvites as IInvite[]).filter(i => i.read == false));
+  }, [])
 
   useEffect(() => {
-    setUnreadInvites((globalInvites as IInvite[]).filter(i => i.read == false));
-  }, [globalInvites]);
+    if (!user) return;
+  
+    const unsubscribe = client.subscribe(
+      `databases.${config.databaseId}.collections.${config.userInviteCollection}.documents.${user.$id}`,
+      response => {
+  
+        const userInvite = response.payload as IUserInvite;
+  
+        setGlobalInvites(userInvite.invites);
+        setUnreadInvites(userInvite.invites.filter(i => i.read == false));
+      }
+    );
+  
+    return () => {
+      unsubscribe();
+    };
+  }, [user]);
 
 
   return (

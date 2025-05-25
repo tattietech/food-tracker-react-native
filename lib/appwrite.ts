@@ -7,6 +7,8 @@ import { IUser } from '@/interfaces/IUser';
 import { Alert } from 'react-native';
 import { Account, Avatars, Client, Databases, ID, Query } from 'react-native-appwrite'
 import PushNotificationIOS from '@react-native-community/push-notification-ios';
+import { IInvite } from '@/interfaces/IInvite';
+import { IUserInvite } from '@/interfaces/IUserInvite';
 
 export const config = {
     endpoint: "https://cloud.appwrite.io/v1",
@@ -18,7 +20,8 @@ export const config = {
     foodSpaceCollectionId: '67b31600002018a89402',
     householdCollectionId: '67b336b9002d6f610161',
     applePushNotificationProviderId: '67daecc2003189b72b14',
-    inviteCollectionId: '67dd8571002f44d2a250'
+    inviteCollectionId: '67dd8571002f44d2a250',
+    userInviteCollection: '68330a150004a25e5c4f'
 }
 
 // Init your React Native SDK
@@ -160,6 +163,23 @@ export const appwrite = {
             if (!currentUser) throw Error;
 
             return currentUser.documents[0];
+        } catch (error) {
+            console.log("attempted get user");
+            throw new Error((error as Error).message);
+        }
+    },
+
+    getUserIdByEmail: async (email: string): Promise<string> => {
+        try {
+            const user = await databases.listDocuments<IUser>(
+                config.databaseId,
+                config.userCollectionId,
+                [Query.equal("email", email)]
+            );
+
+            if (!user) throw Error;
+
+            return user.documents[0].$id;
         } catch (error) {
             console.log("attempted get user");
             throw new Error((error as Error).message);
@@ -406,7 +426,151 @@ export const appwrite = {
             console.log(error);
             throw new Error((error as Error).message);
         }
-    }
+    },
+    checkDuplicateInvite: async (sender: string, receiver: string, household: string): Promise<boolean> => {
+        try {
+            const foodSpaces = await databases.listDocuments<IFoodSpace>(
+                config.databaseId,
+                config.inviteCollectionId,
+                [Query.equal('sender', sender), Query.equal('receiver', receiver), Query.equal('household', household)]
+            )
+
+            return (foodSpaces.documents != null && foodSpaces.documents.length > 0);
+        } catch (error) {
+            throw new Error((error as Error).message);
+        }
+    },
+    createInvite: async (sender: string, receiver: string, household: string, status: string, senderName: string): Promise<IInvite> => {
+        try {
+            const duplicate = await appwrite.checkDuplicateInvite(sender, receiver, household);
+
+            if (duplicate) {
+                console.log("duplicate invite");
+                throw new Error("duplicate invite")
+            }
+            const newInvite = await databases.createDocument(
+                config.databaseId,
+                config.inviteCollectionId,
+                ID.unique(),
+                {
+                    sender,
+                    receiver,
+                    household,
+                    status,
+                    senderName
+                }
+            );
+
+            return newInvite as IInvite;
+        }
+        catch (error) {
+            console.log(error);
+            throw new Error((error as Error).message);
+        }
+    },
+    createUserInvite: async (userId: string, invites: string[]) : Promise<IUserInvite> => {
+        try {
+            const newUserInvite = await databases.createDocument(
+                config.databaseId,
+                config.userInviteCollection,
+                userId,
+                {
+                    invites
+                }
+            )
+    
+            return newUserInvite as IUserInvite;
+        }
+        catch (error) {
+            console.log(error);
+            throw new Error((error as Error).message)
+        }
+    },
+    getUserInvite: async (id: string): Promise<IUserInvite[]> => {
+        try {
+            const userInvite = await databases.listDocuments<IUserInvite>(
+                config.databaseId,
+                config.userInviteCollection,
+                [Query.equal('$id', id)]
+            )
+
+            console.log(`Number of user invites found with id: ${userInvite.documents.length}`);
+
+            return userInvite.documents;
+        } catch (error) {
+            throw new Error((error as Error).message);
+        }
+    },
+    addInviteToUserInvite: async (userId: string, invite: string) : Promise<IUserInvite> => {
+        try {
+            console.log("checking for existing user");
+            const existingUserInvite = await appwrite.getUserInvite(userId);
+
+            if (existingUserInvite == undefined || existingUserInvite == null || existingUserInvite.length == 0) {
+                console.log("no user invite found, creating...");
+                const newUserInvite = await appwrite.createUserInvite(userId, [invite]);
+
+                console.log(`Created with id: ${newUserInvite.$id}`);
+                return newUserInvite as IUserInvite;
+            }
+
+            console.log(`Existing user invite found with id ${existingUserInvite}`);
+
+            const invites = [invite]
+            existingUserInvite[0].invites.forEach(i => {
+                if (i.$id != invite) {
+                    invites.push(i.$id);
+                }
+            });
+
+            const updatedUserInvite = await databases.updateDocument(
+                config.databaseId,
+                config.userInviteCollection,
+                userId,
+                {
+                    invites
+                }
+            )
+    
+            return updatedUserInvite as IUserInvite;
+        }
+        catch (error) {
+            console.log(error);
+            throw new Error((error as Error).message)
+        }
+    },
+    removeInviteFromUserInvite: async (userId: string, invite: string) : Promise<IUserInvite> => {
+        try {
+            const existingUserInvite = await appwrite.getUserInvite(userId);
+
+            if (existingUserInvite == undefined || existingUserInvite == null || existingUserInvite.length == 0) {
+                throw new Error((`Error - user invite doesn't exist with id ${userId}`));
+            }
+            
+            const invites : string[] = []
+            existingUserInvite[0].invites.forEach(i => {
+                if (i.$id != invite)
+                {
+                    invites.push(i.$id);
+                }
+            });
+
+            const updatedUserInvite = await databases.updateDocument(
+                config.databaseId,
+                config.userInviteCollection,
+                userId,
+                {
+                    invites
+                }
+            )
+    
+            return updatedUserInvite as IUserInvite;
+        }
+        catch (error) {
+            console.log(error);
+            throw new Error((error as Error).message)
+        }
+    },
 }
 
 // export const getLatestPosts = async () => {

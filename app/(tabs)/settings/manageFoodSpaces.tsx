@@ -12,7 +12,7 @@ import CustomFormModal from '@/components/CustomFormModal';
 import { IFoodSpace } from '@/interfaces/IFoodSpace';
 import { showSuccessToast } from '@/lib/toast';
 
-export default function Settings() {
+export default function manageFoodSpaces() {
   const { setUser, setIsLoggedIn, user, setGlobalFoodSpaces, setGlobalItems } = useGlobalContext();
   const [manageFoodSpaces, setManageFoodSpaces] = useState(false);
   const [createSpaceModalVisible, setCreateSpaceModalVisible] = useState(false);

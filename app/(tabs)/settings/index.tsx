@@ -22,11 +22,11 @@ export default function Settings() {
                 data={[
                   {
                     title: "Manage Food Spaces",
-                    action: () => { router.push('/settings/manageFoodSpaces') }
+                    action: () => { router.push('/(tabs)/settings/manageFoodSpaces') }
                   },
                   {
                     title: "Manage Household",
-                    action: () => { router.push('/settings/manageHousehold') }
+                    action: () => { router.push('/(tabs)/settings/manageHousehold') }
                   },
                   {
                     title: "Log Out",
