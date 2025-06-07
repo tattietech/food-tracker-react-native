@@ -4,4 +4,5 @@ export interface IItemForm {
     quantity: string
     foodSpaceName: string
     foodSpaceId: string
+    updatingItem: boolean
 }

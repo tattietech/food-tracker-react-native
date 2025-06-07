@@ -43,7 +43,9 @@ export default function ItemForm(props: ItemFormProps) {
 
     const submit = async () => {
         let finalFoodSpaceId = props.form.foodSpaceId;
-        let finalFoodSpaceName = props.form.foodSpaceName
+        let finalFoodSpaceName = props.form.foodSpaceName;
+
+        const { globalFoodSpaces } = useGlobalContext();
 
         if (createFoodSpace) {
             let nfs = await appwrite.createFoodSpace(props.form.foodSpaceName, user.activeHouseholdId);
@@ -69,6 +71,13 @@ export default function ItemForm(props: ItemFormProps) {
 
         setQuantity(1);
     }
+
+    useEffect(() => {
+        if (foodSpaces[0] != undefined && !props.form.updatingItem) {
+            console.log(`Selected Food Space: ${selectedFoodSpace}`);
+            setSelectedFoodSpace(foodSpaces[0].$id);
+        }
+    }, [globalFoodSpaces]);
 
     useEffect(() => {
         const fetchFoodSpaces = async () => {

@@ -21,7 +21,8 @@ export default function Add() {
     expiry: new Date(),
     quantity: "1",
     foodSpaceId: "",
-    foodSpaceName: ""
+    foodSpaceName: "",
+    updatingItem: false
   })
 
 
@@ -43,12 +44,22 @@ export default function Add() {
         return newList.sort((a, b) => new Date(a.expiry).getTime() - new Date(b.expiry).getTime());
       });
 
+      const getInitialFoodspaceId = () => {
+        if (form.foodSpaceId =="") {
+          return globalFoodSpaces[0].$id;
+        }
+
+        return form.foodSpaceId;
+      }
+
+      const updatingItem = false;
       setForm({
         title: "",
         expiry: new Date(),
         quantity: "1",
         foodSpaceId: form.foodSpaceId ?? "",
-        foodSpaceName: globalFoodSpaces.find((fs: { $id: string; }) => fs.$id == form.foodSpaceId)?.name ?? ""
+        foodSpaceName: globalFoodSpaces.find((fs: { $id: string; }) => fs.$id == getInitialFoodspaceId())?.name ?? "",
+        updatingItem
       });
 
       showSuccessToast("Success", `${title} added`);

@@ -37,7 +37,8 @@ export default function Home() {
           expiry: new Date(),
           quantity: "1",
           foodSpaceId: "",
-          foodSpaceName: ""
+          foodSpaceName: "",
+          updatingItem: true
       }
       )
 
@@ -146,6 +147,7 @@ const closeUpdateItem = () => {
         };
       });
 
+      const updatingItem = true;
       return (
         <View className="flex flex-row w-[35%]">
           <TouchableOpacity onPress={() => {closeAllSwipeables(); setUpdatingItemId(itemId); setForm({
@@ -153,7 +155,8 @@ const closeUpdateItem = () => {
             expiry,
             quantity,
             foodSpaceId,
-            foodSpaceName
+            foodSpaceName,
+            updatingItem
           }), setUpdateItem(true) }} className="w-1/2">
           <Reanimated.View className="bg-blue h-24 px-4 items-center justify-center">
             <Text className="text-white">Edit</Text>
