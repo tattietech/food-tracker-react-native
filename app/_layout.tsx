@@ -21,38 +21,6 @@ export default function RootLayout() {
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
 
-  // useEffect(() => {
-  //   // Request APNS permissions
-  //   PushNotificationIOS.requestPermissions().then((permissions) => {
-  //     if (permissions?.alert || permissions?.badge || permissions?.sound) {
-  //       console.log('APNS Permissions granted:', permissions);
-  //     } else {
-  //       Alert.alert('Push Notification Permission', 'You need to enable notifications in settings.');
-  //     }
-  //   });
-
-  //   // Listen for the APNS token
-  //   const onRegister = (token: string) => {
-  //     console.log('APNS Token:', token);
-  //     appwrite.registerDeviceToken(token);
-  //   };
-
-  //   // Handle incoming notifications
-  //   const onNotification = (notification: any) => {
-  //     Alert.alert(notification.getTitle(), notification.getMessage());
-  //   };
-
-  //   // Add event listeners
-  //   PushNotificationIOS.addEventListener('register', onRegister);
-  //   PushNotificationIOS.addEventListener('notification', onNotification);
-
-  //   return () => {
-  //     // Clean up event listeners
-  //     PushNotificationIOS.removeEventListener('register');
-  //     PushNotificationIOS.removeEventListener('notification');
-  //   };
-  // }, []);
-
   const toastConfig = {
     /*
       Overwrite 'success' type,

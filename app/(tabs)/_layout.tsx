@@ -31,7 +31,7 @@ export default function TabLayout() {
     }
 
     fetchInvites();
-    setUnreadInvites((globalInvites as IInvite[]).filter(i => i.read == false));
+    //setUnreadInvites((globalInvites as IInvite[]).filter(i => i.read == false));
   }, [])
 
   useEffect(() => {
@@ -57,6 +57,7 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
+        lazy: false,
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
         tabBarShowLabel: true,

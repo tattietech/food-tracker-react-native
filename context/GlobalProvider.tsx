@@ -21,6 +21,7 @@ const [isLoading, setIsLoading] = useState(true);
 const [globalItems, setGlobalItems] = useState<IItem[] | null>(null);
 const [globalFoodSpaces, setGlobalFoodSpaces] = useState<IFoodSpace[] | null>(null)
 const [globalInvites, setGlobalInvites] = useState<IInvite[] | null>(null);
+const [globalCurrentHouse, setGlobalCurrentHouse] = useState<string>("");
 
 useEffect(() => {
     appwrite.getCurrentUser()
@@ -57,7 +58,9 @@ useEffect(() => {
                 globalFoodSpaces,
                 setGlobalFoodSpaces,
                 globalInvites,
-                setGlobalInvites
+                setGlobalInvites,
+                globalCurrentHouse,
+                setGlobalCurrentHouse
             }}
         >
             {props.children}

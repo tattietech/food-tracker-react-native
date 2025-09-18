@@ -127,7 +127,12 @@ export default function FoodSpaceList(props: FoodSpaceListProps) {
                 body="Deleting this space will also remove all the items it contains."
                 visible={itemWarningVisible}
                 action={() => { deleteSpace(spaceToDelete, spaceToDeleteName) }}
-                cancel={() => { setItemWarningVisible(false) }} />
+                cancel={() => { setItemWarningVisible(false) }}
+                positiveactionText="Delete"
+                negativeActionText="Cancel"
+                positiveActionColour="bg-blue"
+                negativeActionColour="bg-red"
+                />
             <FlatList
                 data={globalFoodSpaces}
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}

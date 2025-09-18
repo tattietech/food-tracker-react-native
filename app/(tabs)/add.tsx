@@ -26,15 +26,16 @@ export default function Add() {
   })
 
 
-  const submit = async (title: string, expiry: Date, quantity: string, foodSpaceId: string, foodSpaceName: string) => {
-    if (!title || !expiry || !quantity || !foodSpaceName || !foodSpaceId) {
+  const submit = async (title: string, quantity: string, foodSpaceId: string, foodSpaceName: string, expiry?: Date) => {
+    if (!title || !quantity || !foodSpaceName || !foodSpaceId) {
       showErrorToast("Error", `Please fill in all fields`);
       return;
     }
 
     try {
-      let item = await appwrite.createFoodItem(title, expiry, quantity.toString(), user.activeHouseholdId,
-        foodSpaceId);
+      console.log("trying to create food item");
+      let item = await appwrite.createFoodItem(title, quantity.toString(), user.activeHouseholdId,
+        foodSpaceId, expiry);
 
       setGlobalItems((prevItems: IItem[] | null) => {
         // If prevItems is null, initialize it as an empty array, then add the new item

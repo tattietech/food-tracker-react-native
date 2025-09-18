@@ -197,8 +197,8 @@ export const appwrite = {
         }
     },
 
-    createFoodItem: async (name: string, expiry: Date, quantity: string, householdId: string, foodSpaceId: string): Promise<IItem> => {
-
+    createFoodItem: async (name: string, quantity: string, householdId: string, foodSpaceId: string, expiry?: Date,): Promise<IItem> => {
+        console.log("creating food item in appwrite");
         let quant = parseInt(quantity, 10) || 1;
         console.log("appwrite.ts : foodspaceID : " + foodSpaceId);
         try {
@@ -417,13 +417,71 @@ export const appwrite = {
             throw new Error((error as Error).message);
         }
     },
-
-    setCurrentUserHousehold: async (userId: string, houseId: string): Promise<void> => {
+    setCurrentUserHousehold: async (userId: string, accountId: string, activeHouseholdId: string): Promise<void> => {
         try {
-            await databases.updateDocument(config.databaseId, config.userCollectionId, userId,)
+            // const userHouseholds = await appwrite.getUsersHouseholds(accountId);
+            // const matchingHouseholds = userHouseholds.find(h => h.$id === activeHouseholdId);
+            
+            // if (matchingHouseholds == undefined) {
+            //     console.log("User is not member of requested household");
+            //     throw new Error("User is not member of requested household");
+            // }
+            
+            await databases.updateDocument(
+                config.databaseId,
+                config.userCollectionId,
+                userId,
+                {
+                    activeHouseholdId
+                } 
+            )
         }
         catch (error) {
             console.log(error);
+            throw new Error((error as Error).message);
+        }
+    },
+    getUsersHouseholds: async (userId:string): Promise<IHousehold[]> => {
+        try {
+            console.log(`Getting households for ${userId}`);
+            const households = await databases.listDocuments<IHousehold>(
+                config.databaseId,
+                config.householdCollectionId,
+                [Query.contains("users", userId)]
+            )
+
+            return households.documents as IHousehold[]
+        } catch (error) {
+            throw new Error((error as Error).message);
+        }
+    },
+    getHouseholdById: async (householdId:string): Promise<IHousehold> => {
+        try {
+            const household = await databases.getDocument<IHousehold>(
+                config.databaseId,
+                config.householdCollectionId,
+                householdId
+            )
+
+            return household;
+        } catch (error) {
+            throw new Error((error as Error).message);
+        }
+    },
+    addUserToHousehold: async (userId:string, householdId:string): Promise<void> => {
+        try {
+            const household = await appwrite.getHouseholdById(householdId);
+            household.users.push(userId);
+            
+            const updatedItem = await databases.updateDocument(
+                config.databaseId,
+                config.householdCollectionId,
+                householdId,
+                {
+                    users: household.users
+                }
+            );
+        } catch (error) {
             throw new Error((error as Error).message);
         }
     },
@@ -432,7 +490,7 @@ export const appwrite = {
             const foodSpaces = await databases.listDocuments<IFoodSpace>(
                 config.databaseId,
                 config.inviteCollectionId,
-                [Query.equal('sender', sender), Query.equal('receiver', receiver), Query.equal('household', household)]
+                [Query.equal('sender', sender), Query.equal('receiver', receiver), Query.equal('household', household), Query.equal('status', 'pending')]
             )
 
             return (foodSpaces.documents != null && foodSpaces.documents.length > 0);
@@ -491,7 +549,7 @@ export const appwrite = {
             const userInvite = await databases.listDocuments<IUserInvite>(
                 config.databaseId,
                 config.userInviteCollection,
-                [Query.equal('$id', id)]
+                [Query.equal('$id', id), Query.equal('status', 'pending')]
             )
 
             console.log(`Number of user invites found with id: ${userInvite.documents.length}`);
@@ -571,6 +629,38 @@ export const appwrite = {
             throw new Error((error as Error).message)
         }
     },
+    setInviteStatus: async (inviteId: string, status: string) => {
+        try {
+            await databases.updateDocument(
+                config.databaseId,
+                config.inviteCollectionId,
+                inviteId,
+                {
+                    status
+                }
+            )
+        }
+        catch (error) {
+            console.log(error);
+            throw new Error((error as Error).message);
+        }
+    },
+    updateHouseName: async (id: string, newName: string) => {
+        try {
+            await databases.updateDocument(
+                config.databaseId,
+                config.householdCollectionId,
+                id,
+                {
+                    name: newName
+                }
+            )
+        }
+        catch (error) {
+            console.log(error);
+            throw new Error((error as Error).message);
+        }
+    }
 }
 
 // export const getLatestPosts = async () => {

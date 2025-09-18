@@ -1,7 +1,6 @@
-import { View, Text, Keyboard, TouchableWithoutFeedback, TextInput, SafeAreaView } from 'react-native'
+import { View, Text, Keyboard, TouchableWithoutFeedback, TextInput, SafeAreaView, TouchableOpacity } from 'react-native'
 import React, { useEffect, useRef, useState } from 'react'
 import DividerLine from './DividerLine'
-import { TouchableOpacity } from 'react-native'
 import Home from '@/app/(tabs)/home'
 import { Icon } from './Icon'
 import { IFoodSpace } from '@/interfaces/IFoodSpace'
@@ -15,9 +14,10 @@ import NumberInput from './NumberInput'
 import CustomButton from './CustomButton'
 import { appwrite } from '@/lib/appwrite'
 import { IItemForm } from '@/interfaces/IItemForm'
+import Checkbox from 'expo-checkbox';
 
 export interface ItemFormProps {
-    submit: (title: string, expiry: Date, quantity: string, foodSpaceId: string, foodSpaceName: string) => void
+    submit: (title: string, quantity: string, foodSpaceId: string, foodSpaceName: string, expiry?: Date) => void
     form: IItemForm
     setForm: (form: IItemForm) => void
     title: string
@@ -40,12 +40,11 @@ export default function ItemForm(props: ItemFormProps) {
     const newFoodSpaceTextBoxRef = useRef<TextInput>(null);
     const [quantity, setQuantity] = useState(1);
     const [scanningMode, setScanningMode] = useState("code");
+    const [canExpire, setCanExpire] = useState(props.form.expiry != null);
 
     const submit = async () => {
         let finalFoodSpaceId = props.form.foodSpaceId;
         let finalFoodSpaceName = props.form.foodSpaceName;
-
-        const { globalFoodSpaces } = useGlobalContext();
 
         if (createFoodSpace) {
             let nfs = await appwrite.createFoodSpace(props.form.foodSpaceName, user.activeHouseholdId);
@@ -63,21 +62,22 @@ export default function ItemForm(props: ItemFormProps) {
             setNewFoodSpace("");
         }
 
-        props.submit(props.form.title,
-            props.form.expiry,
-            props.form.quantity,
-            finalFoodSpaceId,
-            finalFoodSpaceName);
+        if (canExpire) {
+            props.submit(props.form.title,
+                props.form.quantity,
+                finalFoodSpaceId,
+                finalFoodSpaceName,
+                props.form.expiry);
+        }
+        else {
+            props.submit(props.form.title,
+                props.form.quantity,
+                finalFoodSpaceId,
+                finalFoodSpaceName);
+        }
 
         setQuantity(1);
     }
-
-    useEffect(() => {
-        if (foodSpaces[0] != undefined && !props.form.updatingItem) {
-            console.log(`Selected Food Space: ${selectedFoodSpace}`);
-            setSelectedFoodSpace(foodSpaces[0].$id);
-        }
-    }, [globalFoodSpaces]);
 
     useEffect(() => {
         const fetchFoodSpaces = async () => {
@@ -125,6 +125,10 @@ export default function ItemForm(props: ItemFormProps) {
 
     useEffect(() => {
         setFoodSpaces(globalFoodSpaces);
+
+        if (foodSpaces[0] != undefined && !props.form.updatingItem) {
+            setSelectedFoodSpace(foodSpaces[0].$id);
+        }
     }, [globalFoodSpaces]);
 
     useEffect(() => {
@@ -165,21 +169,28 @@ export default function ItemForm(props: ItemFormProps) {
                                 otherStyles='w-full'
                             />
                             <TouchableOpacity
-                                    onPress={() => { setScanningMode("code"); setScanning(true) }}
-                                    activeOpacity={0.7}
-                                    className="bg-primary flex-row space-x-2 px-2 h-12 w-28 rounded-xl justify-center items-center absolute right-1 mt-10"
-                                >
-                                    <Icon name="barcode" color="white" size={30} />
-                                    <Text className="text-white">Scan</Text>
-                                </TouchableOpacity>
+                                onPress={() => { setScanningMode("code"); setScanning(true) }}
+                                activeOpacity={0.7}
+                                className="bg-primary flex-row space-x-2 px-2 h-12 w-28 rounded-xl justify-center items-center absolute right-1 mt-10"
+                            >
+                                <Icon name="barcode" color="white" size={30} />
+                                <Text className="text-white">Scan</Text>
+                            </TouchableOpacity>
                         </View>
 
                         <View>
-                            <Text className="text-base font-pmedium ml-2">Expiry Date</Text>
+                            <View className="flex flex-row">
+                                <Text className="text-base font-pmedium ml-2">Expiry Date</Text>
+                                <Checkbox
+                                    value={canExpire}
+                                    onValueChange={setCanExpire}
+                                    className="ml-2 mt-0.5"
+                                />
+                            </View>
 
-                            <View className="flex flex-row items-center mt-2 border-2 rounded-xl h-16 px-4">
+                            <View pointerEvents={!canExpire ? 'none' : 'auto'} style={{ opacity: canExpire ? 1 : 0.2 }} className="flex flex-row items-center mt-2 border-2 rounded-xl h-16 px-4">
                                 <TouchableOpacity className="h-full w-full flex-row items-center" onPress={() => { setEnterManually(!enterManually) }}>
-                                    <Text className="text-base font-pmedium">{new Date(props.form.expiry).toLocaleDateString()}</Text>
+                                    <Text className="text-base font-pmedium">{props.form.expiry ? new Date(props.form.expiry).toLocaleDateString() : new Date().toLocaleDateString()}</Text>
                                 </TouchableOpacity>
 
                                 <TouchableOpacity
@@ -216,19 +227,36 @@ export default function ItemForm(props: ItemFormProps) {
                                     ref={newFoodSpaceTextBoxRef}
                                     value={props.form.foodSpaceName}
                                     handleChangeText={(e) => props.setForm({ ...props.form, foodSpaceName: e })}
-                                    otherStyles="w-full"
+                                    otherStyles="w-[75%]"
                                 />
                                 <TouchableOpacity
                                     onPress={() => {
-                                        setSelectedFoodSpace(foodSpaces[0].$id);
-                                        setCreateFoodSpace(false);
-                                        Keyboard.dismiss()
+                                        newFoodSpaceTextBoxRef.current?.clear();
                                     }}
                                     activeOpacity={0.7}
-                                    className="bg-white flex-row self-center space-x-2 px-2 h-12 rounded-xl justify-center items-center absolute right-2"
+                                    className="bg-white flex-row self-center space-x-2 px-2 h-12 rounded-xl justify-center items-center absolute right-28"
                                 >
                                     <Icon name="close-circle-outline" color="black" size={30} />
                                 </TouchableOpacity>
+                                <CustomButton containerStyles='w-[25%] h-12 rounded-xl ml-1' title="Cancel" handlePress={() => {
+                                    setSelectedFoodSpace(foodSpaces[0].$id);
+                                    setCreateFoodSpace(false);
+                                    Keyboard.dismiss()
+                                }} />
+                                <View className="flex flex-row">
+                                    {/* <TouchableOpacity className="mt-3 ml-2">
+                                        <Icon onPress={() => {  }} name="checkmark" color={'green'} size={40}></Icon>
+                                    </TouchableOpacity> */}
+
+                                    {/* <TouchableOpacity className="mt-3 ml-1">
+                                        <Icon onPress={() => {
+                                            setSelectedFoodSpace(foodSpaces[0].$id);
+                                            setCreateFoodSpace(false);
+                                            Keyboard.dismiss()
+                                        }} name="close" color={'grey'} size={40}></Icon>
+                                    </TouchableOpacity> */}
+
+                                </View>
                             </View>
 
                             {/* DropDownPicker for Selecting Food Space */}

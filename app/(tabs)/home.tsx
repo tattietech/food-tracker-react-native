@@ -5,7 +5,7 @@ import { appwrite } from '@/lib/appwrite';
 import { useEffect, useRef, useState } from 'react';
 import Item from '@/components/Item';
 import { IItem } from '@/interfaces/IItem';
-import { RefreshControl } from 'react-native';
+import { RefreshControl, Image } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import Reanimated, {
@@ -25,7 +25,7 @@ import { showSuccessToast } from '@/lib/toast';
 import { IInvite } from '@/interfaces/IInvite';
 
 export default function Home() {
-  const { globalItems, setGlobalItems, user, globalInvites } = useGlobalContext();
+  const { globalItems, setGlobalItems, user, globalCurrentHouse, setGlobalCurrentHouse } = useGlobalContext();
   const [groupedItems, setGroupedItems] = useState<Section[]>([]);
   const swipeableRefs = useRef(new Map<string, any>());
   const [updateItem, setUpdateItem] = useState(false);
@@ -117,16 +117,16 @@ export default function Home() {
     setRefreshing(false);
   }
 
-  useEffect(() => {
+  useEffect(() =>  {
+    const fetchData = async () => {
+      const house = await appwrite.getHouseholdById(user.activeHouseholdId);
+      setGlobalCurrentHouse(house.name);
+    }
+
+    fetchData();
     console.log(`home userid - ${user.$id}`);
     onRefresh();
   }, []);
-
-  // useEffect(() => {
-  //   if (data) {
-  //     setGlobalItems(data);
-  //   }
-  // }, [data]);
 
   const swipeableRef = useRef<any>(null);
 
@@ -139,7 +139,7 @@ const closeUpdateItem = () => {
 }
 
 
-  const rightAction = (itemId: string, title: string, expiry: Date, quantity: string, foodSpaceId: string, foodSpaceName: string) =>
+  const rightAction = (itemId: string, title: string, quantity: string, foodSpaceId: string, foodSpaceName: string, expiry?: Date) =>
     (prog: SharedValue<number>, drag: SharedValue<number>) => {
       const styleAnimation = useAnimatedStyle(() => {
         return {
@@ -174,43 +174,56 @@ const closeUpdateItem = () => {
     }
   return (
     <SafeAreaView className="h-full bg-white">
-      <PageHeader title="Home" />
+      <PageHeader title={globalCurrentHouse} />
 
       <UpdateItemModal id={updatingItemId} form={form} setForm={setForm} visible={updateItem} cancel={closeUpdateItem}/> 
 
-<SectionList
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-      sections={groupedItems}
-      extraData={expandedSections}
-      keyExtractor={(item, index) => `${item}-${index}`}
-      renderItem={({ section: { title }, item }) => {
-        const isExpanded = expandedSections.has(title);
-        if (!isExpanded) return null;
+      {
+        globalItems != null && globalItems != undefined && (globalItems as IItem[]).length > 0 ?
 
-        return <GestureHandlerRootView>
-            <ReanimatedSwipeable
-              ref={(ref) => ref && swipeableRefs.current.set(item.$id, ref)}
-              friction={2}
-              enableTrackpadTwoFingerGesture
-              rightThreshold={40}
-              renderRightActions={rightAction(item.$id, item.name, item.expiry, item.quantity.toString(), item.foodSpace.$id, item.foodSpace.$id)}>
-              <Item name={item.name} quantity={item.quantity} expiry={item.expiry} />
-            </ReanimatedSwipeable>
-          </GestureHandlerRootView>
-      }}
-      renderSectionHeader={({ section: { title } }) => (
-        <Pressable onPress={() => handleToggle(title)}>
-          <View className="flex flex-row bg-gray-200 p-2 justify-between items-center">
-            <Text className="text-lg font-bold">{title}</Text>
+        <SectionList
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        sections={groupedItems}
+        extraData={expandedSections}
+        keyExtractor={(item, index) => `${item}-${index}`}
+        renderItem={({ section: { title }, item }) => {
+          const isExpanded = expandedSections.has(title);
+          if (!isExpanded) return null;
+  
+          return <GestureHandlerRootView>
+              <ReanimatedSwipeable
+                ref={(ref) => ref && swipeableRefs.current.set(item.$id, ref)}
+                friction={2}
+                enableTrackpadTwoFingerGesture
+                rightThreshold={40}
+                renderRightActions={rightAction(item.$id, item.name, item.quantity.toString(), item.foodSpace.$id, item.foodSpace.$id, item.expiry)}>
+                <Item name={item.name} quantity={item.quantity} expiry={item.expiry} />
+              </ReanimatedSwipeable>
+            </GestureHandlerRootView>
+        }}
+        renderSectionHeader={({ section: { title } }) => (
+          <Pressable onPress={() => handleToggle(title)}>
+            <View className="flex flex-row bg-gray-200 p-2 justify-between items-center">
+              <Text className="text-lg font-bold">{title}</Text>
+  
+              {
+                sectionExpanded(title) ? (<Icon name="chevron-down-sharp" size={20}></Icon>)
+                : (<Icon name="chevron-forward-sharp" size={20}></Icon>)
+              }
+            </View>
+            </Pressable>
+        )}
+      />
 
-            {
-              sectionExpanded(title) ? (<Icon name="chevron-down-sharp" size={20}></Icon>)
-              : (<Icon name="chevron-forward-sharp" size={20}></Icon>)
-            }
-          </View>
-          </Pressable>
-      )}
-    />
+      :
+
+      <View className="my-auto">
+        <Image className="w-[70%] h-[60%] mx-auto" source={require('../../assets/images/fridge.png')} />
+        <Text className="text-3xl text-center">You have no items yet</Text>
+        <Text className="mx-auto text-center mt-3 text-lg w-[70%]">Go to the Add Item tab to add some items to your food spaces</Text>
+      </View>
+      }
+     
     </SafeAreaView>
   );
 }

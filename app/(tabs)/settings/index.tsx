@@ -25,8 +25,12 @@ export default function Settings() {
                     action: () => { router.push('/(tabs)/settings/manageFoodSpaces') }
                   },
                   {
-                    title: "Manage Household",
+                    title: "Manage This House",
                     action: () => { router.push('/(tabs)/settings/manageHousehold') }
+                  },
+                  {
+                    title: "Manage My Houses",
+                    action: () => { router.push('/(tabs)/settings/manageMyHouseholds') }
                   },
                   {
                     title: "Log Out",
