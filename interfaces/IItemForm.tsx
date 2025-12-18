@@ -1,7 +1,8 @@
 export interface IItemForm {
     title : string
-    expiry : Date
+    expiry? : Date
     quantity: string
     foodSpaceName: string
     foodSpaceId: string
+    updatingItem: boolean
 }

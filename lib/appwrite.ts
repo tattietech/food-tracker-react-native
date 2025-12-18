@@ -7,6 +7,8 @@ import { IUser } from '@/interfaces/IUser';
 import { Alert } from 'react-native';
 import { Account, Avatars, Client, Databases, ID, Query } from 'react-native-appwrite'
 import PushNotificationIOS from '@react-native-community/push-notification-ios';
+import { IInvite } from '@/interfaces/IInvite';
+import { IUserInvite } from '@/interfaces/IUserInvite';
 
 export const config = {
     endpoint: "https://cloud.appwrite.io/v1",
@@ -17,11 +19,13 @@ export const config = {
     itemCollectionId: '67da8b4a00128755557d',
     foodSpaceCollectionId: '67b31600002018a89402',
     householdCollectionId: '67b336b9002d6f610161',
-    applePushNotificationProviderId: '67daecc2003189b72b14'
+    applePushNotificationProviderId: '67daecc2003189b72b14',
+    inviteCollectionId: '67dd8571002f44d2a250',
+    userInviteCollection: '68330a150004a25e5c4f'
 }
 
 // Init your React Native SDK
-const client = new Client();
+export const client = new Client();
 
 client
     .setEndpoint(config.endpoint) // Your Appwrite Endpoint
@@ -62,6 +66,7 @@ export const appwrite = {
 
         // Handle incoming notifications
         const onNotification = (notification: any) => {
+            console.log("notification");
             Alert.alert(notification.getTitle(), notification.getMessage());
         };
 
@@ -69,17 +74,33 @@ export const appwrite = {
         PushNotificationIOS.addEventListener('register', onRegister);
         PushNotificationIOS.addEventListener('notification', onNotification);
 
-        return () => {
-            // Clean up event listeners
-            PushNotificationIOS.removeEventListener('register');
-            PushNotificationIOS.removeEventListener('notification');
-        };
+        // return () => {
+        //     // Clean up event listeners
+        //     PushNotificationIOS.removeEventListener('register');
+        //     PushNotificationIOS.removeEventListener('notification');
+        // };
     },
+
+    // subscribeToInvites: async (userId: string) => {
+    //     console.log("subscribing...");
+    //     // Subscribe to files channel
+    //     client.subscribe(`databases.${config.databaseId}.collections.${config.userCollectionId}.documents.${userId}`, response => {
+    //         // if (response.events.includes('buckets.*.files.*.create')) {
+    //         //     // Log when a new file is uploaded
+    //         //     console.log(response.payload);
+    //         // }
+
+    //         console.log(response.payload);
+
+    //         //console.log("invite update " + JSON.stringify(response));
+    //     });
+    // },
 
     signIn: async (email: string, password: string) => {
         try {
             const session = await account.createEmailPasswordSession(email, password);
             await appwrite.setupNotifications();
+
             return session;
         } catch (error) {
             console.log("attempted to sign in");
@@ -110,7 +131,7 @@ export const appwrite = {
             const newUser = await databases.createDocument(
                 config.databaseId,
                 config.userCollectionId,
-                ID.unique(),
+                newAccount.$id,
                 {
                     accountId: newAccount.$id,
                     email: email,
@@ -148,6 +169,23 @@ export const appwrite = {
         }
     },
 
+    getUserIdByEmail: async (email: string): Promise<string> => {
+        try {
+            const user = await databases.listDocuments<IUser>(
+                config.databaseId,
+                config.userCollectionId,
+                [Query.equal("email", email)]
+            );
+
+            if (!user) throw Error;
+
+            return user.documents[0].$id;
+        } catch (error) {
+            console.log("attempted get user");
+            throw new Error("Could not find user");
+        }
+    },
+
     signOut: async () => {
         try {
             const session = await account.deleteSession("current");
@@ -159,8 +197,8 @@ export const appwrite = {
         }
     },
 
-    createFoodItem: async (name: string, expiry: Date, quantity: string, householdId: string, foodSpaceId: string): Promise<IItem> => {
-
+    createFoodItem: async (name: string, quantity: string, householdId: string, foodSpaceId: string, expiry?: Date,): Promise<IItem> => {
+        console.log("creating food item in appwrite");
         let quant = parseInt(quantity, 10) || 1;
         console.log("appwrite.ts : foodspaceID : " + foodSpaceId);
         try {
@@ -379,10 +417,255 @@ export const appwrite = {
             throw new Error((error as Error).message);
         }
     },
-
-    setCurrentUserHousehold: async (userId: string, houseId: string): Promise<void> => {
+    setCurrentUserHousehold: async (userId: string, accountId: string, activeHouseholdId: string): Promise<void> => {
         try {
-            await databases.updateDocument(config.databaseId, config.userCollectionId, userId,)
+            // const userHouseholds = await appwrite.getUsersHouseholds(accountId);
+            // const matchingHouseholds = userHouseholds.find(h => h.$id === activeHouseholdId);
+            
+            // if (matchingHouseholds == undefined) {
+            //     console.log("User is not member of requested household");
+            //     throw new Error("User is not member of requested household");
+            // }
+            
+            await databases.updateDocument(
+                config.databaseId,
+                config.userCollectionId,
+                userId,
+                {
+                    activeHouseholdId
+                } 
+            )
+        }
+        catch (error) {
+            console.log(error);
+            throw new Error((error as Error).message);
+        }
+    },
+    getUsersHouseholds: async (userId:string): Promise<IHousehold[]> => {
+        try {
+            console.log(`Getting households for ${userId}`);
+            const households = await databases.listDocuments<IHousehold>(
+                config.databaseId,
+                config.householdCollectionId,
+                [Query.contains("users", userId)]
+            )
+
+            return households.documents as IHousehold[]
+        } catch (error) {
+            throw new Error((error as Error).message);
+        }
+    },
+    getHouseholdById: async (householdId:string): Promise<IHousehold> => {
+        try {
+            const household = await databases.getDocument<IHousehold>(
+                config.databaseId,
+                config.householdCollectionId,
+                householdId
+            )
+
+            return household;
+        } catch (error) {
+            throw new Error((error as Error).message);
+        }
+    },
+    addUserToHousehold: async (userId:string, householdId:string): Promise<void> => {
+        try {
+            const household = await appwrite.getHouseholdById(householdId);
+            household.users.push(userId);
+            
+            const updatedItem = await databases.updateDocument(
+                config.databaseId,
+                config.householdCollectionId,
+                householdId,
+                {
+                    users: household.users
+                }
+            );
+        } catch (error) {
+            throw new Error((error as Error).message);
+        }
+    },
+    removeUserFromHousehold: async (userId:string, householdId:string): Promise<void> => {
+        try {
+            let household = await appwrite.getHouseholdById(householdId);
+            household.users = household.users.filter(u => u !== userId);
+            
+            const updatedItem = await databases.updateDocument(
+                config.databaseId,
+                config.householdCollectionId,
+                householdId,
+                {
+                    users: household.users
+                }
+            );
+        } catch (error) {
+            throw new Error((error as Error).message);
+        }
+    },
+    checkDuplicateInvite: async (sender: string, receiver: string, household: string): Promise<boolean> => {
+        try {
+            const foodSpaces = await databases.listDocuments<IInvite>(
+                config.databaseId,
+                config.inviteCollectionId,
+                [Query.equal('sender', sender), Query.equal('receiver', receiver), Query.equal('household', household), Query.equal('status', 'pending')]
+            )
+
+            return (foodSpaces.documents != null && foodSpaces.documents.length > 0);
+        } catch (error) {
+            throw new Error((error as Error).message);
+        }
+    },
+    createInvite: async (sender: string, receiver: string, household: string, status: string, senderName: string): Promise<IInvite> => {
+        try {
+            const newInvite = await databases.createDocument(
+                config.databaseId,
+                config.inviteCollectionId,
+                ID.unique(),
+                {
+                    sender,
+                    receiver,
+                    household,
+                    status,
+                    senderName
+                }
+            );
+
+            return newInvite as IInvite;
+        }
+        catch (error) {
+            console.log(error);
+            throw new Error((error as Error).message);
+        }
+    },
+    createUserInvite: async (userId: string, invites: string[]) : Promise<IUserInvite> => {
+        try {
+            const newUserInvite = await databases.createDocument(
+                config.databaseId,
+                config.userInviteCollection,
+                userId,
+                {
+                    invites
+                }
+            )
+    
+            return newUserInvite as IUserInvite;
+        }
+        catch (error) {
+            console.log(error);
+            throw new Error((error as Error).message)
+        }
+    },
+    getUserInvite: async (id: string): Promise<IUserInvite[]> => {
+        try {
+            const userInvite = await databases.listDocuments<IUserInvite>(
+                config.databaseId,
+                config.userInviteCollection,
+                [Query.equal('$id', id)]
+            )
+
+            console.log(`Number of user invites found with id: ${userInvite.documents.length}`);
+
+            return userInvite.documents;
+        } catch (error) {
+            throw new Error((error as Error).message);
+        }
+    },
+    addInviteToUserInvite: async (userId: string, invite: string) : Promise<IUserInvite> => {
+        try {
+            console.log("checking for existing user");
+            const existingUserInvite = await appwrite.getUserInvite(userId);
+
+            if (existingUserInvite == undefined || existingUserInvite == null || existingUserInvite.length == 0) {
+                console.log("no user invite found, creating...");
+                const newUserInvite = await appwrite.createUserInvite(userId, [invite]);
+
+                console.log(`Created with id: ${newUserInvite.$id}`);
+                return newUserInvite as IUserInvite;
+            }
+
+            console.log(`Existing user invite found with id ${existingUserInvite}`);
+
+            const invites = [invite]
+            existingUserInvite[0].invites.forEach(i => {
+                if (i.$id != invite) {
+                    invites.push(i.$id);
+                }
+            });
+
+            const updatedUserInvite = await databases.updateDocument(
+                config.databaseId,
+                config.userInviteCollection,
+                userId,
+                {
+                    invites
+                }
+            )
+    
+            return updatedUserInvite as IUserInvite;
+        }
+        catch (error) {
+            console.log(error);
+            throw new Error((error as Error).message)
+        }
+    },
+    removeInviteFromUserInvite: async (userId: string, invite: string) : Promise<IUserInvite> => {
+        try {
+            const existingUserInvite = await appwrite.getUserInvite(userId);
+
+            if (existingUserInvite == undefined || existingUserInvite == null || existingUserInvite.length == 0) {
+                throw new Error((`Error - user invite doesn't exist with id ${userId}`));
+            }
+            
+            const invites : string[] = []
+            existingUserInvite[0].invites.forEach(i => {
+                if (i.$id != invite)
+                {
+                    invites.push(i.$id);
+                }
+            });
+
+            const updatedUserInvite = await databases.updateDocument(
+                config.databaseId,
+                config.userInviteCollection,
+                userId,
+                {
+                    invites
+                }
+            )
+    
+            return updatedUserInvite as IUserInvite;
+        }
+        catch (error) {
+            console.log(error);
+            throw new Error((error as Error).message)
+        }
+    },
+    setInviteStatus: async (inviteId: string, status: string) => {
+        try {
+            await databases.updateDocument(
+                config.databaseId,
+                config.inviteCollectionId,
+                inviteId,
+                {
+                    status
+                }
+            )
+        }
+        catch (error) {
+            console.log(error);
+            throw new Error((error as Error).message);
+        }
+    },
+    updateHouseName: async (id: string, newName: string) => {
+        try {
+            await databases.updateDocument(
+                config.databaseId,
+                config.householdCollectionId,
+                id,
+                {
+                    name: newName
+                }
+            )
         }
         catch (error) {
             console.log(error);

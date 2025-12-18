@@ -21,19 +21,21 @@ export default function Add() {
     expiry: new Date(),
     quantity: "1",
     foodSpaceId: "",
-    foodSpaceName: ""
+    foodSpaceName: "",
+    updatingItem: false
   })
 
 
-  const submit = async (title: string, expiry: Date, quantity: string, foodSpaceId: string, foodSpaceName: string) => {
-    if (!title || !expiry || !quantity || !foodSpaceName || !foodSpaceId) {
+  const submit = async (title: string, quantity: string, foodSpaceId: string, foodSpaceName: string, expiry?: Date) => {
+    if (!title || !quantity || !foodSpaceName || !foodSpaceId) {
       showErrorToast("Error", `Please fill in all fields`);
       return;
     }
 
     try {
-      let item = await appwrite.createFoodItem(title, expiry, quantity.toString(), user.activeHouseholdId,
-        foodSpaceId);
+      console.log("trying to create food item");
+      let item = await appwrite.createFoodItem(title, quantity.toString(), user.activeHouseholdId,
+        foodSpaceId, expiry);
 
       setGlobalItems((prevItems: IItem[] | null) => {
         // If prevItems is null, initialize it as an empty array, then add the new item
@@ -43,12 +45,22 @@ export default function Add() {
         return newList.sort((a, b) => new Date(a.expiry).getTime() - new Date(b.expiry).getTime());
       });
 
+      const getInitialFoodspaceId = () => {
+        if (form.foodSpaceId =="") {
+          return globalFoodSpaces[0].$id;
+        }
+
+        return form.foodSpaceId;
+      }
+
+      const updatingItem = false;
       setForm({
         title: "",
         expiry: new Date(),
         quantity: "1",
         foodSpaceId: form.foodSpaceId ?? "",
-        foodSpaceName: globalFoodSpaces.find((fs: { $id: string; }) => fs.$id == form.foodSpaceId)?.name ?? ""
+        foodSpaceName: globalFoodSpaces.find((fs: { $id: string; }) => fs.$id == getInitialFoodspaceId())?.name ?? "",
+        updatingItem
       });
 
       showSuccessToast("Success", `${title} added`);

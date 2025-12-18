@@ -4,6 +4,7 @@ import { IItem } from "../interfaces/IItem";
 import { IUser } from "@/interfaces/IUser";
 import { IFoodSpace } from "@/interfaces/IFoodSpace";
 import useAppwrite from "@/lib/useAppwrite";
+import { IInvite } from "@/interfaces/IInvite";
 
 // default null context
 export const def : any = null;
@@ -19,6 +20,8 @@ const [user, setUser] = useState<IUser | null>(null)
 const [isLoading, setIsLoading] = useState(true);
 const [globalItems, setGlobalItems] = useState<IItem[] | null>(null);
 const [globalFoodSpaces, setGlobalFoodSpaces] = useState<IFoodSpace[] | null>(null)
+const [globalInvites, setGlobalInvites] = useState<IInvite[] | null>(null);
+const [globalCurrentHouse, setGlobalCurrentHouse] = useState<string>("");
 
 useEffect(() => {
     appwrite.getCurrentUser()
@@ -26,6 +29,7 @@ useEffect(() => {
         if (res) {
             setIsLoggedIn(true);
             setUser(res);
+            setGlobalInvites(res?.invites);
         }
         else {
             setIsLoggedIn(false);
@@ -52,7 +56,11 @@ useEffect(() => {
                 globalItems,
                 setGlobalItems,
                 globalFoodSpaces,
-                setGlobalFoodSpaces
+                setGlobalFoodSpaces,
+                globalInvites,
+                setGlobalInvites,
+                globalCurrentHouse,
+                setGlobalCurrentHouse
             }}
         >
             {props.children}

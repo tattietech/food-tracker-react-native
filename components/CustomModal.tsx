@@ -7,6 +7,10 @@ interface CustomModalProps {
     visible: boolean
     title: string
     body: string
+    positiveactionText: string
+    negativeActionText: string
+    positiveActionColour: string
+    negativeActionColour: string
 }
 
 const CustomModal = (props : CustomModalProps) => {
@@ -22,14 +26,14 @@ const CustomModal = (props : CustomModalProps) => {
                         <Text className="mb-4 text-center">{props.body}</Text>
                         <View className="flex flex-row">
                             <Pressable
-                                className="bg-blue rounded-lg p-3 mr-1"
+                                className={`${props.negativeActionColour} rounded-lg p-3 mr-1`}
                                 onPress={() => {props.cancel()}}>
-                                <Text className="text-white font-bold text-center">Cancel</Text>
+                                <Text className="text-white font-bold text-center">{props.negativeActionText}</Text>
                             </Pressable>
                             <Pressable
-                                className="bg-red rounded-lg p-3 ml-1"
+                                className={`${props.positiveActionColour} rounded-lg p-3 ml-1`}
                                 onPress={() => {props.action()}}>
-                                <Text className="text-white font-bold text-center">Delete</Text>
+                                <Text className="text-white font-bold text-center">{props.positiveactionText}</Text>
                             </Pressable>
                         </View>
                     </View>
