@@ -7,6 +7,7 @@ import { FlatList, View, Text, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { appwrite } from '@/lib/appwrite';
 import RNRestart from 'react-native-restart';
+import { IInvite } from "@/interfaces/IInvite";
 
 export default function Notifications() {
 
@@ -20,13 +21,16 @@ export default function Notifications() {
         setModalVisible(false);
 
         console.log("adding to house hold");
-        await appwrite.addUserToHousehold(user.accountId, newHouseholdId);
+        await appwrite.addUserToHousehold(user.$id, newHouseholdId);
 
         console.log("setting household");
         await appwrite.setCurrentUserHousehold(user.$id, user.accountId, newHouseholdId);
 
         console.log("setting invite status");
         await appwrite.setInviteStatus(selectedInviteId, "accepted");
+
+        console.log("removing invite from userInvite");
+        await appwrite.removeInviteFromUserInvite(user.$id, selectedInviteId);
 
         console.log("resetting");
         RNRestart.restart();
@@ -36,7 +40,7 @@ export default function Notifications() {
         await appwrite.removeInviteFromUserInvite(user.$id, selectedInviteId);
         setModalVisible(false);
         await appwrite.setInviteStatus(selectedInviteId, "declined");
-        
+        setGlobalInvites((globalInvites as IInvite[]).filter(i => i.$id !== selectedInviteId))
     }
 
     const openModal = (inviteId: string, name: string, household: string) => {

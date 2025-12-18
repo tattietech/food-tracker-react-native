@@ -4,9 +4,28 @@ import { appwrite } from '@/lib/appwrite';
 import { FlatList, SafeAreaView } from 'react-native';
 import { router } from 'expo-router'
 import PageHeader from '@/components/PageHeader';
+import { useEffect, useState } from 'react';
 
 export default function Settings() {
-  const { setUser, setIsLoggedIn} = useGlobalContext();
+  const { setUser, setIsLoggedIn, user} = useGlobalContext();
+  const [moreThanOneHouse, setMoreThanOneHouse] = useState(false);
+
+  useEffect(() => {
+      const fetchData = async () => {
+        try {
+          const householdList = await appwrite.getUsersHouseholds(user.accountId);
+
+          if (householdList.length > 1) {
+            setMoreThanOneHouse(true);
+          }
+
+        } catch (error) {
+          console.error('Error fetching data:', error);
+        }
+      };
+  
+      fetchData();
+    }, []);
 
   const logOut = async () => {
     await appwrite.signOut();
@@ -27,11 +46,15 @@ export default function Settings() {
                   {
                     title: "Manage This House",
                     action: () => { router.push('/(tabs)/settings/manageHousehold') }
-                  },
-                  {
-                    title: "Manage My Houses",
-                    action: () => { router.push('/(tabs)/settings/manageMyHouseholds') }
-                  },
+                  },              
+                  ...(moreThanOneHouse
+                      ? [
+                          {
+                            title: "Manage My Houses",
+                            action: () => router.push("/(tabs)/settings/manageMyHouseholds"),
+                          },
+                        ]
+                      : []),
                   {
                     title: "Log Out",
                     action: logOut

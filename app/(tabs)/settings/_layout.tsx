@@ -1,7 +1,6 @@
 import { Stack } from 'expo-router';
-import React, { lazy } from 'react';
+import React from 'react';
 import 'react-native-reanimated';
-import GlobalProvider from '@/context/GlobalProvider';
 
 export default function SettingsLayout() {
   return (

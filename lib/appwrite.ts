@@ -131,7 +131,7 @@ export const appwrite = {
             const newUser = await databases.createDocument(
                 config.databaseId,
                 config.userCollectionId,
-                ID.unique(),
+                newAccount.$id,
                 {
                     accountId: newAccount.$id,
                     email: email,
@@ -182,7 +182,7 @@ export const appwrite = {
             return user.documents[0].$id;
         } catch (error) {
             console.log("attempted get user");
-            throw new Error((error as Error).message);
+            throw new Error("Could not find user");
         }
     },
 
@@ -485,9 +485,26 @@ export const appwrite = {
             throw new Error((error as Error).message);
         }
     },
+    removeUserFromHousehold: async (userId:string, householdId:string): Promise<void> => {
+        try {
+            let household = await appwrite.getHouseholdById(householdId);
+            household.users = household.users.filter(u => u !== userId);
+            
+            const updatedItem = await databases.updateDocument(
+                config.databaseId,
+                config.householdCollectionId,
+                householdId,
+                {
+                    users: household.users
+                }
+            );
+        } catch (error) {
+            throw new Error((error as Error).message);
+        }
+    },
     checkDuplicateInvite: async (sender: string, receiver: string, household: string): Promise<boolean> => {
         try {
-            const foodSpaces = await databases.listDocuments<IFoodSpace>(
+            const foodSpaces = await databases.listDocuments<IInvite>(
                 config.databaseId,
                 config.inviteCollectionId,
                 [Query.equal('sender', sender), Query.equal('receiver', receiver), Query.equal('household', household), Query.equal('status', 'pending')]
@@ -500,12 +517,6 @@ export const appwrite = {
     },
     createInvite: async (sender: string, receiver: string, household: string, status: string, senderName: string): Promise<IInvite> => {
         try {
-            const duplicate = await appwrite.checkDuplicateInvite(sender, receiver, household);
-
-            if (duplicate) {
-                console.log("duplicate invite");
-                throw new Error("duplicate invite")
-            }
             const newInvite = await databases.createDocument(
                 config.databaseId,
                 config.inviteCollectionId,
@@ -549,7 +560,7 @@ export const appwrite = {
             const userInvite = await databases.listDocuments<IUserInvite>(
                 config.databaseId,
                 config.userInviteCollection,
-                [Query.equal('$id', id), Query.equal('status', 'pending')]
+                [Query.equal('$id', id)]
             )
 
             console.log(`Number of user invites found with id: ${userInvite.documents.length}`);

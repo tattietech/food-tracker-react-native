@@ -11,6 +11,8 @@ import CustomFormModal from '@/components/CustomFormModal';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { Icon } from '@/components/Icon';
 import FormField from '@/components/FormField';
+import { IHousehold } from '@/interfaces/IHousehold';
+import { IUser } from '@/interfaces/IUser';
 
 export default function ManageHousehold() {
   const { user, globalCurrentHouse, setGlobalCurrentHouse } = useGlobalContext();
@@ -19,41 +21,57 @@ export default function ManageHousehold() {
   const [editingName, setEditingName] = useState(false);
   const [newName, setNewName] = useState("");
   const newHouseNameRef = useRef<TextInput>(null);
-
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     const house = await appwrite.getHouseholdById(user.activeHouseholdId);
-  //     setGlobalCurrentHouse(house.name);
-  //   }
-
-  //   fetchData();
-  //   setNewName(globalCurrentHouse);
-  // }, [globalCurrentHouse]);
+  const [house, setHouse] = useState<IHousehold>();
 
   useEffect(() => {
     const fetchData = async () => {
       const house = await appwrite.getHouseholdById(user.activeHouseholdId);
+      setHouse(house);
       setGlobalCurrentHouse(house.name);
-      setNewName(house.name);  // ✅ set newName based on latest house.name
+      setNewName(house.name);
     };
 
     fetchData();
-  }, []); // ✅ empty array so it only runs once on mount
+  }, []);
 
   const sendInvite = async () => {
     try {
+      if ((user as IUser).email == inviteeEmail) {
+        showErrorToast("Error", "Cannot invite yourself");
+        return;
+      }
+
       // find invitee userid by email
       var invitee = await appwrite.getUserIdByEmail(inviteeEmail);
+
+      house?.users.forEach(element => {
+        console.log(element);
+      });
+
+      console.log(`invitee ${invitee}`);
+
+      if (house?.users.includes(invitee)) {
+        showErrorToast("Error", "User is already a member of this household");
+        return;
+      }
+
+      console.log("Got invitee");
 
       // create invite in invite table
       var invite = await appwrite.createInvite(user.$id, invitee, user.activeHouseholdId, "Pending", user.name);
 
+      console.log("Got invite");
+
       // add invite to user invite, this creates if it doesn't exist already
       var userInvite = await appwrite.addInviteToUserInvite(invitee, invite.$id);
+
+      console.log("Got user invite");
+
+      showSuccessToast("Success", `${inviteeEmail} invited`);
     }
     catch (error) {
       if ((error as Error).message) {
-        showErrorToast("Error", `You have already invited this user.`);
+        showErrorToast("Error", (error as Error).message);
       }
     }
   }

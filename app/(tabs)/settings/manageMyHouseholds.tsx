@@ -47,7 +47,7 @@ export default function ManageMyHouseholds() {
   }
 
   const openModal = (id: string, name: string) => {
-    if (selectedHouseholdId === user.activeHouseholdId) {
+    if (id === user.activeHouseholdId) {
       showErrorToast("Error", "This household is already active");
       return;
     }

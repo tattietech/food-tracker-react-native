@@ -44,7 +44,7 @@ export default function TabLayout() {
         const userInvite = response.payload as IUserInvite;
   
         setGlobalInvites(userInvite.invites);
-        setUnreadInvites(userInvite.invites.filter(i => i.read == false));
+        //setUnreadInvites(userInvite.invites.filter(i => i.read == false));
       }
     );
   
