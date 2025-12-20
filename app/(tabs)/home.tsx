@@ -173,7 +173,7 @@ const closeUpdateItem = () => {
       );
     }
   return (
-    <SafeAreaView className="h-full bg-bgLight dark:bg-bgDark">
+    <SafeAreaView className="h-full bg-bgLight dark:bg-bgDark items-center">
       <PageHeader title={globalCurrentHouse} />
 
       <UpdateItemModal id={updatingItemId} form={form} setForm={setForm} visible={updateItem} cancel={closeUpdateItem}/> 
@@ -181,7 +181,7 @@ const closeUpdateItem = () => {
       {
         globalItems != null && globalItems != undefined && (globalItems as IItem[]).length > 0 ?
 
-        <View className="w-[98%] items-center">
+        <View className="w-[96%] items-center">
         <SectionList
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         sections={groupedItems}
@@ -204,7 +204,7 @@ const closeUpdateItem = () => {
         }}
         renderSectionHeader={({ section: { title } }) => (
           <Pressable onPress={() => handleToggle(title)}>
-            <View className="flex flex-row bg-gray-200 p-2 justify-between items-center bg-secondary rounded-l mt-3">
+            <View className="flex flex-row bg-gray-200 p-2 justify-between items-center bg-secondary rounded-lg mt-3">
               <Text className="text-lg font-bold text-textDark">{title}</Text>
   
               {
