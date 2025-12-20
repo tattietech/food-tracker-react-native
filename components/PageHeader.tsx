@@ -11,7 +11,7 @@ export interface PageHeaderProps {
 export default function PageHeader(props: PageHeaderProps) {
     return (
         <>
-        <View className="flex flex-row items-center justify-center w-full">
+        <View className="flex flex-row items-center justify-center w-full mb-5">
             {props.backButton &&
             (
                 <TouchableOpacity onPress={() => {
@@ -25,11 +25,11 @@ export default function PageHeader(props: PageHeaderProps) {
                 </TouchableOpacity>
             )
             }
-            <Text className="text-2xl font-psemibolds flex-1 text-center mr-3">
+            <Text className="text-2xl font-psemibolds flex-1 text-center mr-3 text-textLight dark:text-textDark">
                 {props.title}
             </Text>
         </View>
-        <DividerLine fullWidth={true} />
+        {/* <DividerLine fullWidth={true} /> */}
         </>
     )
 }

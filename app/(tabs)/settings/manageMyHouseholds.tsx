@@ -58,7 +58,7 @@ export default function ManageMyHouseholds() {
   }
 
   return (
-    <SafeAreaView className="h-full bg-white">
+    <SafeAreaView className="h-full bg-fieldLight dark:bg-fieldDark">
       <PageHeader title="Manage My Houses" backButton={() => { router.back() }} />
       <CustomModal
         action={switchHousehold}

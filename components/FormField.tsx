@@ -8,26 +8,35 @@ interface FormFieldProps {
     handleChangeText: (text: string) => void;
     otherStyles?: string;
     keyboardType?: KeyboardTypeOptions | undefined;
-  }
+    textColor?: string;
+}
 
-const FormField = React.forwardRef((props : FormFieldProps, ref:LegacyRef<TextInput>) => {
-    const [showPassword, setshowPassword] = useState(false)
+const FormField = React.forwardRef((props: FormFieldProps, ref: LegacyRef<TextInput>) => {
+    const [showPassword, setshowPassword] = useState(false);
+    const [inputColor, setInputColor] = useState(props.textColor);
+
+    React.useEffect(() => {
+        setInputColor(props.textColor);
+        console.log(`text colour - ${inputColor}`);
+    }, [props.textColor]);
 
     return (
         <View className={`space-y-2 ${props.otherStyles}`}>
-            {props.title && <Text className="text-base font-pmedium ml-2">{props.title}</Text>}
+            {props.title && <Text className="text-base font-pmedium ml-2 text-textLight dark:text-textDark">{props.title}</Text>}
 
             <View className="border-2 w-full h-16 px-4
-            rounded-2xl focus:border-secondary items-center flex-row">
+            rounded-2xl focus:border-secondary items-center flex-row bg-fieldLight dark:bg-fieldDark">
                 <TextInput
+                    key={props.textColor}
                     ref={ref}
                     className="flex-1 font-psemibold text-base"
                     value={props.value}
                     placeholder={props.placeholder}
-                    placeholderTextColor="#7B7B8B"
+                    placeholderTextColor={props.textColor}
                     onChangeText={props.handleChangeText}
                     secureTextEntry={props.title === "Password" && !showPassword}
                     keyboardType={props.keyboardType}
+                    style={{ color: inputColor }}
                 />
 
                 {props.title === "Password" && (

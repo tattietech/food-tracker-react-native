@@ -51,7 +51,7 @@ export default function Notifications() {
     }
 
     return (
-        <SafeAreaView className="bg-white h-full">
+        <SafeAreaView className="bg-bgLight dark:bg-bgDark h-full">
             <PageHeader title={"Notifications"}/>
 
             <CustomModal
@@ -79,8 +79,8 @@ export default function Notifications() {
 
                           <View className="my-auto">
                                   <Image className="w-[40%] h-[40%] mx-auto" source={require('../../assets/images/bell.png')} />
-                                  <Text className="mt-5 text-3xl text-center">No notifications</Text>
-                                  <Text className="mx-auto text-center mt-3 text-lg w-[70%]">If someone invites you to join their household, it will appear here</Text>
+                                  <Text className="mt-5 text-3xl text-center text-textLight dark:text-textDark">No notifications</Text>
+                                  <Text className="mx-auto text-center mt-3 text-lg w-[70%] text-textLight dark:text-textDark">If someone invites you to join their household, it will appear here</Text>
                                 </View>
                 }
         </SafeAreaView>

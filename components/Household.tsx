@@ -11,7 +11,7 @@ export interface HouseProps {
 export default function Household(props: HouseProps) {
     return (
         <TouchableOpacity onPress={props.onPress}>
-            <View className="flex-col self-center h-24 justify-center mb-0.5 w-full bg-white px-4 shadow">
+            <View className="flex-col self-center h-24 justify-center mb-0.5 w-full bg-white px-4 shadow ">
                 <Text className="text-2xl">{props.name}</Text>
                 {
                     props.active &&

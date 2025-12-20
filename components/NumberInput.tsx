@@ -10,8 +10,8 @@ interface NumberInputProps {
 
 export default function NumberInput(props: NumberInputProps) {
     return (
-        <View className="flex flex-row space-x-3 h-10 items-center mt-1 border-2 rounded-xl h-16">
-            <Text className="text-base ml-2">{props.quantity}</Text>
+        <View className="flex flex-row space-x-3 h-10 items-center mt-1 border-2 rounded-xl h-16 bg-fieldLight dark:bg-fieldDark">
+            <Text className="text-base ml-2 text-textLight dark:text-textDark">{props.quantity}</Text>
             <View className="absolute right-1 flex flex-row space-x-1">
                 <TouchableOpacity
                     onPress={() => {
@@ -21,7 +21,7 @@ export default function NumberInput(props: NumberInputProps) {
                         }
                     }}
                     activeOpacity={0.7}
-                    className="bg-primary rounded-xl w-12 h-12 justify-center items-center"
+                    className="bg-secondary rounded-xl w-12 h-12 justify-center items-center"
                 >
                     <Text className="text-white font-psemibold text-2xl ${props.textStyles">
                         -
@@ -33,7 +33,7 @@ export default function NumberInput(props: NumberInputProps) {
                         props.setQuantity(props.quantity + 1);
                     }}
                     activeOpacity={0.7}
-                    className="bg-primary rounded-xl w-12 h-12 justify-center items-center"
+                    className="bg-secondary rounded-xl w-12 h-12 justify-center items-center"
                 >
                     <Text className="text-white font-psemibold text-2xl ${props.textStyles">
                         +

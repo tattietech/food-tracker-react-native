@@ -58,11 +58,14 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         lazy: false,
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
         tabBarShowLabel: true,
         tabBarLabelStyle: {
-          color: 'primary'
+          color: useColorScheme() === 'dark' ? 'white' : 'black'
+        },
+        tabBarStyle: {
+          backgroundColor: useColorScheme() === 'dark' ? '#2E4763' : 'white',
+          borderTopColor: useColorScheme() === 'dark' ? '#2E4763' : 'white'
         }
       }}
     >
@@ -71,8 +74,8 @@ export default function TabLayout() {
         options={{
           title: 'Home',
           tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'home' : 'home-outline'} color={'primary'} />
-          ),
+            <TabBarIcon name={focused ? 'home' : 'home-outline'} color={useColorScheme() === 'dark' ? 'white' : 'black'} />
+          )
         }}
       />
       <Tabs.Screen
@@ -80,7 +83,7 @@ export default function TabLayout() {
         options={{
           title: 'Add Item',
           tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'add' : 'add-outline'} color={'primary'} />
+            <TabBarIcon name={focused ? 'add' : 'add-outline'} color={useColorScheme() === 'dark' ? 'white' : 'black'} />
           ),
         }}
       />
@@ -92,7 +95,7 @@ export default function TabLayout() {
             <View>
               <TabBarIcon
                 name={focused ? "notifications" : "notifications-outline"}
-                color={"primary"}
+                color={useColorScheme() === 'dark' ? 'white' : 'black'}
               />
               {
                   (unreadInvites && unreadInvites.length && unreadInvites.length > 0) ?
@@ -113,7 +116,7 @@ export default function TabLayout() {
         options={{
           title: 'Settings',
           tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'settings' : 'settings-outline'} color={'primary'} />
+            <TabBarIcon name={focused ? 'settings' : 'settings-outline'} color={useColorScheme() === 'dark' ? 'white' : 'black'} />
           ),
         }}
       />

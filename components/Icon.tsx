@@ -4,6 +4,6 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { type IconProps } from '@expo/vector-icons/build/createIconSet';
 import { type ComponentProps } from 'react';
 
-export function Icon({ style, size, ...rest }: IconProps<ComponentProps<typeof Ionicons>['name']>) {
-  return <Ionicons size={size ?? 28} style={style} {...rest} />;
+export function Icon({ style, size, color, ...rest }: IconProps<ComponentProps<typeof Ionicons>['name']>) {
+  return <Ionicons size={size ?? 28} style={style} color={color ?? 'white'} {...rest} />;
 }

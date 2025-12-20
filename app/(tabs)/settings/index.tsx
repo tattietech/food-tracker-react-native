@@ -35,7 +35,7 @@ export default function Settings() {
   }
 
   return (
-    <SafeAreaView className="h-full bg-white">
+    <SafeAreaView className="h-full bg-bgLight dark:bg-bgDark">
               <PageHeader title="Settings" />
               <FlatList
                 data={[

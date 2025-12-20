@@ -86,7 +86,7 @@ export default function manageFoodSpaces() {
 
 
   return (
-    <SafeAreaView className="h-full bg-white">
+    <SafeAreaView className="h-full bg-bgLight dark:bg-bgDark">
               <PageHeader title="Food Spaces" backButton={() => { router.back() }} />
               <FoodSpaceList edit={updateFoodSpace} />
               <CustomFormModal

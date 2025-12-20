@@ -15,11 +15,13 @@ interface BarCodeScannerProps {
 }
 
 const getBarCodeData = async (code: string) => {
+  console.log("Got code, fetching data");
   try {
     const response = await fetch(
       `https://world.openfoodfacts.net/api/v0/product/${code}.json`,
     );
     const json = await response.json();
+    console.log("Got data");
     return json.product as IBarCodeData
   } catch (error) {
     console.error(error);

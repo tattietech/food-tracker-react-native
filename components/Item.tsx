@@ -11,15 +11,15 @@ export interface ItemProps {
 export default function Item(props : ItemProps) {
     let colour = props.expiry ? getDateColour(props.expiry) : "";
     return (
-        <View className="flex-col self-center h-24 justify-center mb-0.5 w-full bg-white px-4 shadow">
-            <Text className="text-2xl">{props.name}</Text>
+        <View className="flex-col self-center h-24 justify-center w-full bg-white px-4 shadow bg-fieldLight dark:bg-fieldDark rounded-lg mt-[0.5%]">
+            <Text className="text-2xl text-textLight dark:text-textDark">{props.name}</Text>
             <View className="flex flex-row justify-between">
                 {
                     props.expiry && 
-                    <Text className={`text-base ${colour == "red" ? 'text-red' : colour == "green" ? 'text-green' : colour == "amber" ? 'text-amber' : 'text-primary'}`}>{new Date(props.expiry).toLocaleDateString()}</Text>
+                    <Text className={`text-base ${colour == "red" ? 'text-red' : colour == "green" ? 'text-green' : colour == "amber" ? 'text-yellow' : 'text-primary'}`}>{new Date(props.expiry).toLocaleDateString()}</Text>
                 }
                 {
-                    props.quantity && props.quantity > 1 && <Text className="text-base transform -translate-y-3">x{props.quantity}</Text>
+                    props.quantity && props.quantity > 1 && <Text className="text-base transform text-textLight dark:text-textDark">x{props.quantity}</Text>
                 }
             </View>
         </View>

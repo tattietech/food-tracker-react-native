@@ -94,7 +94,7 @@ export default function ManageHousehold() {
   }
 
   return (
-    <SafeAreaView className="h-full bg-white">
+    <SafeAreaView className="h-full bg-fieldLight dark:bg-fieldDark">
       <PageHeader title="Manage This House" backButton={() => { router.back() }} />
       <CustomFormModal
         formProps={user.activeHouseholdId}
