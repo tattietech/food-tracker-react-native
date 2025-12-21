@@ -173,7 +173,7 @@ const closeUpdateItem = () => {
       );
     }
   return (
-    <SafeAreaView className="h-full bg-bgLight dark:bg-bgDark items-center">
+    <SafeAreaView className="h-full bg-bgLight dark:bg-bgDark">
       <PageHeader title={globalCurrentHouse} />
 
       <UpdateItemModal id={updatingItemId} form={form} setForm={setForm} visible={updateItem} cancel={closeUpdateItem}/> 
@@ -181,11 +181,13 @@ const closeUpdateItem = () => {
       {
         globalItems != null && globalItems != undefined && (globalItems as IItem[]).length > 0 ?
 
-        <View className="w-[96%] items-center">
+        <View className="w-[94%] ml-[3%]">
         <SectionList
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         sections={groupedItems}
         extraData={expandedSections}
+        style={{ width: '100%' }}
+        contentContainerStyle={{ width: '100%' }}
         keyExtractor={(item, index) => `${item}-${index}`}
         renderItem={({ section: { title }, item }) => {
           const isExpanded = expandedSections.has(title);
