@@ -45,17 +45,9 @@ export default function ItemForm(props: ItemFormProps) {
 
     const systemColorScheme = useColorScheme();
     const [isDarkMode, setIsDarkMode] = useState(systemColorScheme === 'dark');
-    const [textColor, setTextColor] = useState("");
 
     useEffect(() => {
         setIsDarkMode(systemColorScheme === 'dark');
-        
-        if (isDarkMode) {
-            setTextColor("white");
-        }
-        else {
-            setTextColor("black");
-        }
     }, [systemColorScheme]);
 
 
@@ -129,7 +121,7 @@ export default function ItemForm(props: ItemFormProps) {
                 foodSpaces.map(fs => ({
                     label: fs.name,
                     value: fs.$id,
-                    labelStyle: { color: textColor }
+                    labelStyle: { color: isDarkMode ? 'white' : 'black' }
                 }))
             );
 
@@ -187,7 +179,7 @@ export default function ItemForm(props: ItemFormProps) {
                                 placeholder="The items name"
                                 handleChangeText={(e) => props.setForm({ ...props.form, title: e })}
                                 otherStyles='w-full'
-                                textColor={textColor}
+                                isDarkMode={isDarkMode}
                             />
                             <TouchableOpacity
                                 onPress={() => { setScanningMode("code"); setScanning(true) }}
@@ -237,9 +229,9 @@ export default function ItemForm(props: ItemFormProps) {
                                         props.setForm({ ...props.form, expiry: e.date as Date })
                                         setEnterManually(false);
                                     }}
-                                    headerTextStyle={{color: textColor}}
-                                    calendarTextStyle={{color: textColor}}
-                                    weekDaysTextStyle={{color: textColor}}
+                                    headerTextStyle={{color: useColorScheme() === 'dark' ? 'white' : 'black'}}
+                                    calendarTextStyle={{color: useColorScheme() === 'dark' ? 'white' : 'black'}}
+                                    weekDaysTextStyle={{color: useColorScheme() === 'dark' ? 'white' : 'black'}}
                                     selectedItemColor='#1E7DA9'
                                 />
                             }
@@ -254,6 +246,7 @@ export default function ItemForm(props: ItemFormProps) {
                                     value={props.form.foodSpaceName}
                                     handleChangeText={(e) => props.setForm({ ...props.form, foodSpaceName: e })}
                                     otherStyles="w-[70%]"
+                                    isDarkMode={isDarkMode}
                                 />
 
                                 {/* Cancel button for manually entering new food space */}
@@ -294,9 +287,9 @@ export default function ItemForm(props: ItemFormProps) {
                                     setValue={setSelectedFoodSpace}
                                     multiple={false}
                                     dropDownContainerStyle={{ backgroundColor: useColorScheme() === 'dark' ? '#2E4763' : '#FFFFFF' }}
-                                    textStyle={{ color: textColor }}
-                                    arrowIconStyle={{ tintColor: textColor}}
-                                    tickIconStyle={{ tintColor: textColor }}
+                                    textStyle={{ color: useColorScheme() === 'dark' ? 'white' : 'black' }}
+                                    arrowIconStyle={{ tintColor: useColorScheme() === 'dark' ? 'white' : 'black'}}
+                                    tickIconStyle={{ tintColor: useColorScheme() === 'dark' ? 'white' : 'black' }}
                                 />
                             </View>
                         </View>

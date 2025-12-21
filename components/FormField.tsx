@@ -8,17 +8,11 @@ interface FormFieldProps {
     handleChangeText: (text: string) => void;
     otherStyles?: string;
     keyboardType?: KeyboardTypeOptions | undefined;
-    textColor?: string;
+    isDarkMode?: boolean
 }
 
 const FormField = React.forwardRef((props: FormFieldProps, ref: LegacyRef<TextInput>) => {
     const [showPassword, setshowPassword] = useState(false);
-    const [inputColor, setInputColor] = useState(props.textColor);
-
-    React.useEffect(() => {
-        setInputColor(props.textColor);
-        console.log(`text colour - ${inputColor}`);
-    }, [props.textColor]);
 
     return (
         <View className={`space-y-2 ${props.otherStyles}`}>
@@ -27,16 +21,15 @@ const FormField = React.forwardRef((props: FormFieldProps, ref: LegacyRef<TextIn
             <View className="border-2 w-full h-16 px-4
             rounded-2xl focus:border-secondary items-center flex-row bg-fieldLight dark:bg-fieldDark">
                 <TextInput
-                    key={props.textColor}
+                    key={props.isDarkMode ? 'white' : 'black'}
                     ref={ref}
                     className="flex-1 font-psemibold text-base"
                     value={props.value}
                     placeholder={props.placeholder}
-                    placeholderTextColor={props.textColor}
                     onChangeText={props.handleChangeText}
                     secureTextEntry={props.title === "Password" && !showPassword}
                     keyboardType={props.keyboardType}
-                    style={{ color: inputColor }}
+                    style={{ color: props.isDarkMode ? 'white' : 'black' }}
                 />
 
                 {props.title === "Password" && (
